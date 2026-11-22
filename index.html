@@ -1,0 +1,2588 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cikas Sport Center — Booking Online | RW 025 Taman Cikas</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- SheetJS (XLSX) & jsPDF + AutoTable for Admin Export -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f8fafc;
+            color: #0f172a;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        /* Print Styles untuk E-Tiket */
+        @media print {
+            body * {
+                visibility: hidden !important;
+            }
+            #print-ticket-modal,
+            #print-ticket-modal * {
+                visibility: visible !important;
+            }
+            #print-ticket-modal {
+                position: fixed !important;
+                inset: 0 !important;
+                background: #ffffff !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                display: flex !important;
+                align-items: flex-start !important;
+                justify-content: center !important;
+                z-index: 99999 !important;
+            }
+            #print-ticket-card {
+                box-shadow: none !important;
+                border: 2px solid #0f172a !important;
+                width: 100% !important;
+                max-width: 480px !important;
+                margin-top: 16px !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-teal-500 selection:text-white">
+
+    <!-- ================= HEADER / NAVBAR ================= -->
+    <header class="sticky top-0 z-40 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 text-white shadow-lg no-print">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16 sm:h-20 gap-3">
+                <!-- Brand Logo -->
+                <a href="#" class="flex items-center gap-3 group min-w-0">
+                    <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-br from-teal-400 to-emerald-600 flex items-center justify-center shadow-md shadow-teal-500/20 shrink-0 group-hover:scale-105 transition-transform">
+                        <i data-lucide="trophy" class="w-5 h-5 sm:w-6 sm:h-6 text-slate-950"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <div class="flex items-center gap-2">
+                            <span class="font-extrabold text-base sm:text-lg tracking-tight text-white truncate">Cikas Sport Center</span>
+                            <span class="hidden md:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-500/20 text-teal-300 border border-teal-500/30">
+                                RW 025
+                            </span>
+                        </div>
+                        <p class="text-[11px] sm:text-xs text-slate-400 truncate">Taman Cikas • Pekayon Jaya, Bekasi Selatan</p>
+                    </div>
+                </a>
+
+                <!-- Action Buttons -->
+                <div class="flex items-center gap-2 shrink-0">
+                    <!-- Indikator Status Koneksi Google Sheets -->
+                    <button onclick="openSheetSettingsModal()" id="header-connection-btn" title="Status & Pengaturan Google Sheets"
+                        class="inline-flex items-center gap-2 bg-slate-800/90 hover:bg-slate-700 border border-slate-700 text-slate-200 px-3 py-2.5 rounded-xl text-xs font-bold transition-all active:scale-95">
+                        <span id="connection-dot" class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
+                        <span id="connection-label" class="hidden sm:inline">Menghubungkan...</span>
+                        <i data-lucide="settings" class="w-3.5 h-3.5 text-slate-400"></i>
+                    </button>
+
+                    <!-- Tombol Refresh Jadwal -->
+                    <button onclick="syncFromGoogleSheets(true)" id="btn-sync-now" title="Refresh Jadwal Real-Time"
+                        class="inline-flex items-center gap-1.5 bg-slate-800/90 hover:bg-slate-700 border border-slate-700 text-teal-400 px-3 py-2.5 rounded-xl text-xs font-bold transition-all active:scale-95">
+                        <i data-lucide="refresh-cw" id="sync-icon" class="w-4 h-4"></i>
+                        <span class="hidden lg:inline">Refresh Jadwal</span>
+                    </button>
+
+                    <!-- Tombol Portal Admin -->
+                    <button onclick="openAdminModal()" id="header-admin-btn"
+                        class="inline-flex items-center gap-1.5 bg-amber-400 hover:bg-amber-300 text-slate-950 px-3 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition-all active:scale-95 shadow-md shadow-amber-400/20">
+                        <i data-lucide="shield-check" class="w-4 h-4"></i>
+                        <span id="header-admin-label">Admin</span>
+                    </button>
+
+                    <!-- Tombol Tiket Saya -->
+                    <button onclick="openMyTicketsModal()"
+                        class="relative inline-flex items-center gap-2 bg-teal-500 hover:bg-teal-400 text-slate-950 px-3.5 sm:px-4 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition-all active:scale-95 shadow-md shadow-teal-500/20">
+                        <i data-lucide="ticket" class="w-4 h-4"></i>
+                        <span class="hidden sm:inline">Tiket Saya</span>
+                        <span id="active-ticket-badge" class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-extrabold leading-none text-white bg-slate-900 rounded-full">
+                            0
+                        </span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Banner Status Sinkronisasi -->
+    <div id="sync-status-banner" class="bg-slate-100 border-b border-slate-200 text-slate-700 px-4 py-2 text-xs no-print transition-colors">
+        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+                <i data-lucide="cloud" id="banner-icon" class="w-4 h-4 text-teal-600 shrink-0"></i>
+                <span id="banner-status-text">Menyinkronkan jadwal Lapangan Tenis &amp; Kolam Renang dengan Google Sheets...</span>
+            </div>
+            <span id="last-sync-time" class="text-[11px] font-semibold text-slate-500"></span>
+        </div>
+    </div>
+
+    <!-- ================= HERO & QUICK NAVIGATION ================= -->
+    <section class="relative bg-gradient-to-br from-slate-900 via-slate-900 to-teal-950 text-white py-8 sm:py-12 overflow-hidden no-print">
+        <div class="absolute inset-0 opacity-10 pointer-events-none">
+            <div class="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-teal-400 blur-3xl"></div>
+            <div class="absolute -bottom-24 -left-24 w-96 h-96 rounded-full bg-emerald-500 blur-3xl"></div>
+        </div>
+
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="max-w-3xl">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-teal-300 text-xs font-bold mb-4">
+                    <i data-lucide="map-pin" class="w-3.5 h-3.5"></i>
+                    <span>Fasilitas Olahraga Resmi Lingkungan RW 025 Taman Cikas</span>
+                </div>
+                <h1 class="text-2xl sm:text-4xl font-extrabold tracking-tight leading-tight">
+                    Reservasi Online Lapangan Tenis &amp; Kolam Renang Taman Cikas
+                </h1>
+                <p class="mt-3 text-sm sm:text-base text-slate-300 leading-relaxed">
+                    Sistem booking terpadu khusus warga RW 025 Taman Cikas dan tamu umum. Pilih jadwal bermain tenis di <strong class="text-white">Court 1 / Court 2</strong> atau sesi berenang di <strong class="text-white">Kolam Renang Taman Cikas</strong> secara cepat dan real-time.
+                </p>
+
+                <!-- Quick Jump Buttons -->
+                <div class="mt-6 flex flex-wrap gap-2.5 sm:gap-3">
+                    <button onclick="jumpToBooking('tennis')"
+                        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-extrabold text-xs sm:text-sm transition-all shadow-lg shadow-teal-500/20 active:scale-95">
+                        <i data-lucide="circle-dot" class="w-4 h-4"></i>
+                        <span>Booking Lapangan Tenis</span>
+                    </button>
+                    <button onclick="jumpToBooking('pool')"
+                        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-extrabold text-xs sm:text-sm transition-all shadow-lg shadow-sky-500/20 active:scale-95">
+                        <i data-lucide="waves" class="w-4 h-4"></i>
+                        <span>Booking Kolam Renang</span>
+                    </button>
+                    <a href="#live-board-section"
+                        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 text-white font-bold text-xs sm:text-sm transition-all">
+                        <i data-lucide="calendar-check" class="w-4 h-4 text-teal-300"></i>
+                        <span>Lihat Jadwal Terisi</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ================= MAIN WORKSPACE ================= -->
+    <main id="booking-workspace" class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10 no-print">
+
+        <!-- STEP 1: STATUS PENGUNJUNG & SKEMA TARIF -->
+        <section class="bg-white rounded-3xl p-5 sm:p-7 shadow-sm border border-slate-200/80">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-slate-100">
+                <div>
+                    <span class="inline-flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-teal-600">
+                        <span class="w-5 h-5 rounded-full bg-teal-100 text-teal-700 inline-flex items-center justify-center text-[11px]">1</span>
+                        Kategori Pengunjung &amp; Tarif Otomatis
+                    </span>
+                    <h2 class="text-lg sm:text-xl font-extrabold text-slate-900 mt-1">Pilih Status Pengunjung</h2>
+                    <p class="text-xs sm:text-sm text-slate-500">Tarif fasilitas menyesuaikan status domisili Warga Taman Cikas (RW 025) atau Tamu / Umum.</p>
+                </div>
+
+                <!-- Toggle Warga vs Non-Warga -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full md:w-auto">
+                    <button type="button" id="btn-status-warga" onclick="setVisitorStatus('warga')"
+                        class="flex items-start gap-3 p-3.5 rounded-2xl border-2 text-left transition-all">
+                        <div class="w-9 h-9 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center shrink-0 mt-0.5">
+                            <i data-lucide="home" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-1.5">
+                                <span class="font-extrabold text-sm text-slate-900">Warga Taman Cikas</span>
+                                <span class="px-1.5 py-0.5 rounded-md bg-teal-600 text-white text-[10px] font-bold">RW 025</span>
+                            </div>
+                            <p class="text-[11px] text-slate-600 mt-0.5">Tenis <strong>Rp 35.000</strong>/jam • Renang <strong>Rp 15.000</strong>/org</p>
+                        </div>
+                    </button>
+
+                    <button type="button" id="btn-status-tamu" onclick="setVisitorStatus('tamu')"
+                        class="flex items-start gap-3 p-3.5 rounded-2xl border-2 text-left transition-all">
+                        <div class="w-9 h-9 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center shrink-0 mt-0.5">
+                            <i data-lucide="users" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-1.5">
+                                <span class="font-extrabold text-sm text-slate-900">Tamu / Umum</span>
+                                <span class="px-1.5 py-0.5 rounded-md bg-slate-200 text-slate-700 text-[10px] font-bold">Non-Warga</span>
+                            </div>
+                            <p class="text-[11px] text-slate-600 mt-0.5">Tenis <strong>Rp 60.000</strong>/jam • Renang <strong>Rp 25.000</strong>/org</p>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- STEP 2: PILIH FASILITAS & JADWAL + RINGKASAN FORM -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+            <!-- KOLOM KIRI (7/12): PILIHAN FASILITAS (TENIS / KOLAM RENANG) -->
+            <div class="lg:col-span-7 space-y-6">
+
+                <!-- Tab Switcher Fasilitas -->
+                <div class="bg-white p-2 rounded-2xl shadow-sm border border-slate-200/80 grid grid-cols-2 gap-2">
+                    <button type="button" id="tab-btn-tennis" onclick="switchMainTab('tennis', true)"
+                        class="flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-xl font-extrabold text-xs sm:text-sm transition-all">
+                        <i data-lucide="circle-dot" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+                        <span>Lapangan Tenis Cikas</span>
+                    </button>
+                    <button type="button" id="tab-btn-pool" onclick="switchMainTab('pool', true)"
+                        class="flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-xl font-extrabold text-xs sm:text-sm transition-all">
+                        <i data-lucide="waves" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+                        <span>Kolam Renang Cikas</span>
+                    </button>
+                </div>
+
+                <!-- PANEL A: BOOKING LAPANGAN TENIS -->
+                <div id="panel-tennis" class="bg-white rounded-3xl p-5 sm:p-7 shadow-sm border border-slate-200/80 space-y-6">
+                    <div class="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 pb-4">
+                        <div>
+                            <span class="inline-flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-teal-600">
+                                <span class="w-5 h-5 rounded-full bg-teal-100 text-teal-700 inline-flex items-center justify-center text-[11px]">2</span>
+                                Reservasi Lapangan Tenis
+                            </span>
+                            <h3 class="text-lg sm:text-xl font-extrabold text-slate-900 mt-1">Lapangan Tenis Taman Cikas</h3>
+                            <p class="text-xs text-slate-500">Operasional 06:00 – 21:00 WIB • Durasi per slot 1 jam (bisa pilih lebih dari 1 jam).</p>
+                        </div>
+                        <span class="px-3 py-1 rounded-full bg-teal-50 text-teal-700 border border-teal-200 text-xs font-extrabold" id="tennis-rate-badge">
+                            Rp 35.000 / jam
+                        </span>
+                    </div>
+
+                    <!-- Pilih Tanggal & Pilih Court -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label for="tennis-date-input" class="block text-xs font-bold text-slate-700 mb-1.5">Tanggal Bermain</label>
+                            <div class="relative">
+                                <input type="date" id="tennis-date-input" onchange="onSharedDateChange(this.value)"
+                                    class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Pilih Lapangan (Court)</label>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button type="button" id="btn-court-1" onclick="selectTennisCourt('court-1')"
+                                    class="py-2.5 px-3 rounded-xl border-2 text-xs font-extrabold transition-all flex flex-col items-center justify-center">
+                                    <span>Court 1</span>
+                                    <span class="text-[10px] font-medium opacity-80">Utama / Lampu Malam</span>
+                                </button>
+                                <button type="button" id="btn-court-2" onclick="selectTennisCourt('court-2')"
+                                    class="py-2.5 px-3 rounded-xl border-2 text-xs font-extrabold transition-all flex flex-col items-center justify-center">
+                                    <span>Court 2</span>
+                                    <span class="text-[10px] font-medium opacity-80">Lapangan Timur</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Legend Status Slot -->
+                    <div class="flex flex-wrap items-center justify-between gap-2 bg-slate-50 px-3.5 py-2.5 rounded-xl border border-slate-200/70 text-xs">
+                        <span class="font-bold text-slate-700">Pilih Slot Jam (Multi-select):</span>
+                        <div class="flex flex-wrap items-center gap-3">
+                            <span class="inline-flex items-center gap-1.5 text-slate-600">
+                                <span class="w-3 h-3 rounded-sm bg-white border border-slate-300"></span> Tersedia
+                            </span>
+                            <span class="inline-flex items-center gap-1.5 text-teal-700 font-bold">
+                                <span class="w-3 h-3 rounded-sm bg-teal-600"></span> Dipilih
+                            </span>
+                            <span class="inline-flex items-center gap-1.5 text-rose-700 font-bold">
+                                <span class="w-3 h-3 rounded-sm bg-rose-100 border border-rose-300"></span> Terisi
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Grid Slot Jam 06:00 - 21:00 -->
+                    <div id="tennis-slots-grid" class="grid grid-cols-3 sm:grid-cols-5 gap-2.5">
+                        <!-- Diisi via JavaScript -->
+                    </div>
+                </div>
+
+                <!-- PANEL B: BOOKING KOLAM RENANG -->
+                <div id="panel-pool" class="hidden bg-white rounded-3xl p-5 sm:p-7 shadow-sm border border-slate-200/80 space-y-6">
+                    <div class="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 pb-4">
+                        <div>
+                            <span class="inline-flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-sky-600">
+                                <span class="w-5 h-5 rounded-full bg-sky-100 text-sky-700 inline-flex items-center justify-center text-[11px]">2</span>
+                                Reservasi Kolam Renang
+                            </span>
+                            <h3 class="text-lg sm:text-xl font-extrabold text-slate-900 mt-1">Kolam Renang Taman Cikas</h3>
+                            <p class="text-xs text-slate-500">Akses Kolam Dewasa &amp; Kolam Anak • Kapasitas maksimal 40 orang per sesi.</p>
+                        </div>
+                        <span class="px-3 py-1 rounded-full bg-sky-50 text-sky-700 border border-sky-200 text-xs font-extrabold" id="pool-rate-badge">
+                            Rp 15.000 / orang
+                        </span>
+                    </div>
+
+                    <!-- Tanggal Berenang -->
+                    <div>
+                        <label for="pool-date-input" class="block text-xs font-bold text-slate-700 mb-1.5">Tanggal Kunjungan</label>
+                        <input type="date" id="pool-date-input" onchange="onSharedDateChange(this.value)"
+                            class="w-full sm:w-64 px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white">
+                    </div>
+
+                    <!-- Pilihan Sesi Pagi / Sesi Sore -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-2">Pilih Sesi Berenang (Kuota Real-Time)</label>
+                        <div id="pool-sessions-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                            <!-- Diisi via JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Penghitung Jumlah Pengunjung -->
+                    <div class="space-y-3 pt-2 border-t border-slate-100">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-extrabold text-slate-800 uppercase tracking-wider">Jumlah Pengunjung</span>
+                            <span id="pool-quota-warning" class="text-xs font-bold text-sky-700">Sisa kuota: 40 orang</span>
+                        </div>
+
+                        <!-- Dewasa -->
+                        <div class="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80">
+                            <div>
+                                <p class="text-sm font-bold text-slate-900">Dewasa</p>
+                                <p class="text-xs text-slate-500">Usia 13 tahun ke atas (<span class="pool-unit-price font-semibold">Rp 15.000</span>)</p>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <button type="button" onclick="adjustPoolVisitor('adult', -1)"
+                                    class="w-9 h-9 rounded-xl bg-white border border-slate-300 hover:bg-slate-100 font-extrabold text-slate-700 flex items-center justify-center active:scale-95">−</button>
+                                <span id="count-adult" class="w-6 text-center font-extrabold text-base text-slate-900">1</span>
+                                <button type="button" onclick="adjustPoolVisitor('adult', 1)"
+                                    class="w-9 h-9 rounded-xl bg-sky-600 hover:bg-sky-700 font-extrabold text-white flex items-center justify-center active:scale-95">+</button>
+                            </div>
+                        </div>
+
+                        <!-- Anak-anak -->
+                        <div class="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80">
+                            <div>
+                                <p class="text-sm font-bold text-slate-900">Anak-anak</p>
+                                <p class="text-xs text-slate-500">Usia 3 – 12 tahun (<span class="pool-unit-price font-semibold">Rp 15.000</span>)</p>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <button type="button" onclick="adjustPoolVisitor('child', -1)"
+                                    class="w-9 h-9 rounded-xl bg-white border border-slate-300 hover:bg-slate-100 font-extrabold text-slate-700 flex items-center justify-center active:scale-95">−</button>
+                                <span id="count-child" class="w-6 text-center font-extrabold text-base text-slate-900">0</span>
+                                <button type="button" onclick="adjustPoolVisitor('child', 1)"
+                                    class="w-9 h-9 rounded-xl bg-sky-600 hover:bg-sky-700 font-extrabold text-white flex items-center justify-center active:scale-95">+</button>
+                            </div>
+                        </div>
+
+                        <!-- Balita (< 3 Tahun Gratis) -->
+                        <div class="flex items-center justify-between p-3.5 rounded-2xl bg-emerald-50/60 border border-emerald-200/80">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <p class="text-sm font-bold text-slate-900">Balita (&lt; 3 Tahun)</p>
+                                    <span class="px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-extrabold">GRATIS</span>
+                                </div>
+                                <p class="text-xs text-slate-500">Tetap dihitung dalam kuota kapasitas kolam</p>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <button type="button" onclick="adjustPoolVisitor('toddler', -1)"
+                                    class="w-9 h-9 rounded-xl bg-white border border-slate-300 hover:bg-slate-100 font-extrabold text-slate-700 flex items-center justify-center active:scale-95">−</button>
+                                <span id="count-toddler" class="w-6 text-center font-extrabold text-base text-slate-900">0</span>
+                                <button type="button" onclick="adjustPoolVisitor('toddler', 1)"
+                                    class="w-9 h-9 rounded-xl bg-emerald-600 hover:bg-emerald-700 font-extrabold text-white flex items-center justify-center active:scale-95">+</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KOLOM KANAN (5/12): RINGKASAN & FORM DATA PEMESAN -->
+            <div class="lg:col-span-5">
+                <form id="booking-form" onsubmit="submitReservation(event)" class="bg-white rounded-3xl p-5 sm:p-7 shadow-md border border-slate-200/90 space-y-5 sticky top-24">
+                    <div class="border-b border-slate-100 pb-4">
+                        <span class="inline-flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-teal-600">
+                            <span class="w-5 h-5 rounded-full bg-teal-100 text-teal-700 inline-flex items-center justify-center text-[11px]">3</span>
+                            Konfirmasi &amp; E-Tiket
+                        </span>
+                        <h3 class="text-lg font-extrabold text-slate-900 mt-1">Ringkasan Reservasi</h3>
+                    </div>
+
+                    <!-- Box Ringkasan Pilihan -->
+                    <div class="p-4 rounded-2xl bg-slate-900 text-white space-y-2.5 text-xs">
+                        <div class="flex items-center justify-between">
+                            <span class="text-slate-400">Fasilitas</span>
+                            <span id="summary-facility" class="font-extrabold text-teal-300 text-right">Lapangan Tenis — Court 1</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-slate-400">Tanggal</span>
+                            <span id="summary-date" class="font-bold text-white">-</span>
+                        </div>
+                        <div class="flex items-start justify-between gap-3">
+                            <span class="text-slate-400 shrink-0">Jadwal / Sesi</span>
+                            <span id="summary-schedule" class="font-bold text-amber-300 text-right">Belum ada jam dipilih</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-slate-400">Status &amp; Tarif</span>
+                            <span id="summary-rate-info" class="font-semibold text-slate-200">Warga RW 025 (Rp 35.000/jam)</span>
+                        </div>
+                        <div class="pt-2.5 border-t border-slate-700/80 flex items-center justify-between">
+                            <span class="text-sm font-bold text-slate-200">Total Pembayaran</span>
+                            <span id="summary-total-price" class="text-xl font-extrabold text-teal-400">Rp 0</span>
+                        </div>
+                    </div>
+
+                    <!-- Input Data Pemesan -->
+                    <div class="space-y-3.5">
+                        <div>
+                            <label for="input-name" class="block text-xs font-bold text-slate-700 mb-1">Nama Lengkap Pemesan <span class="text-rose-500">*</span></label>
+                            <input type="text" id="input-name" required placeholder="Contoh: Budi Santoso"
+                                class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white">
+                        </div>
+
+                        <div>
+                            <label for="input-whatsapp" class="block text-xs font-bold text-slate-700 mb-1">Nomor WhatsApp Aktif <span class="text-rose-500">*</span></label>
+                            <input type="tel" id="input-whatsapp" required placeholder="Contoh: 081234567890"
+                                class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white">
+                        </div>
+
+                        <div>
+                            <label for="input-address" id="label-address" class="block text-xs font-bold text-slate-700 mb-1">
+                                Blok &amp; Nomor Rumah (Warga Taman Cikas RW 025) <span class="text-rose-500">*</span>
+                            </label>
+                            <input type="text" id="input-address" required placeholder="Contoh: Blok C4 No. 12"
+                                class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white">
+                        </div>
+
+                        <div>
+                            <label for="input-payment" class="block text-xs font-bold text-slate-700 mb-1">Metode Pembayaran</label>
+                            <select id="input-payment"
+                                class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white">
+                                <option value="QRIS Kas RW 025 Taman Cikas">QRIS Kas RW 025 Taman Cikas</option>
+                                <option value="Transfer Bank BCA (Kas Olahraga RW 025)">Transfer Bank BCA (Kas Olahraga RW 025)</option>
+                                <option value="Bayar Tunai di Loket Petugas Cikas">Bayar Tunai di Loket Petugas Cikas</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="btn-confirm-booking" disabled
+                        class="w-full py-3.5 px-5 rounded-2xl bg-teal-600 hover:bg-teal-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-extrabold text-sm shadow-lg shadow-teal-600/20 disabled:shadow-none flex items-center justify-center gap-2 transition-all active:scale-[0.99]">
+                        <i data-lucide="check-circle-2" class="w-5 h-5"></i>
+                        <span>Konfirmasi Booking &amp; Terbitkan E-Tiket</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- STEP 3: LIVE AVAILABILITY BOARD (PAPAN JADWAL TERISI HARIAN) -->
+        <section id="live-board-section" class="bg-white rounded-3xl p-5 sm:p-7 shadow-sm border border-slate-200/80 space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                <div>
+                    <div class="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-teal-600">
+                        <span class="w-2 h-2 rounded-full bg-teal-500 animate-ping"></span>
+                        <span>Live Availability Board</span>
+                    </div>
+                    <h2 class="text-lg sm:text-xl font-extrabold text-slate-900 mt-1">Papan Jadwal &amp; Kuota Harian</h2>
+                    <p class="text-xs text-slate-500">Data langsung tersinkronisasi dengan database Google Sheets Cikas Sport Center.</p>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <label for="board-date-input" class="text-xs font-bold text-slate-600">Tanggal:</label>
+                    <input type="date" id="board-date-input" onchange="onSharedDateChange(this.value)"
+                        class="px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Board Court 1 -->
+                <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-extrabold text-sm text-slate-900 flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-teal-500"></span>
+                            Lapangan Tenis — Court 1
+                        </h3>
+                        <span id="board-court1-count" class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-200 text-slate-700">0/15 Terisi</span>
+                    </div>
+                    <div id="board-court1-list" class="space-y-2 text-xs">
+                        <!-- Diisi via JS -->
+                    </div>
+                </div>
+
+                <!-- Board Court 2 -->
+                <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-extrabold text-sm text-slate-900 flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                            Lapangan Tenis — Court 2
+                        </h3>
+                        <span id="board-court2-count" class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-200 text-slate-700">0/15 Terisi</span>
+                    </div>
+                    <div id="board-court2-list" class="space-y-2 text-xs">
+                        <!-- Diisi via JS -->
+                    </div>
+                </div>
+
+                <!-- Board Kolam Renang -->
+                <div class="p-4 rounded-2xl bg-sky-50/70 border border-sky-200/80 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-extrabold text-sm text-slate-900 flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-sky-500"></span>
+                            Kolam Renang Taman Cikas
+                        </h3>
+                        <span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-sky-100 text-sky-800">Max 40 Org/Sesi</span>
+                    </div>
+                    <div id="board-pool-list" class="space-y-3 text-xs">
+                        <!-- Diisi via JS -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ================= FOOTER ================= -->
+    <footer class="bg-slate-900 text-slate-400 py-8 border-t border-slate-800 no-print">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs">
+            <div class="text-center sm:text-left">
+                <p class="font-bold text-slate-200">Cikas Sport Center — Pengurus Fasilitas Olahraga RW 025</p>
+                <p class="mt-0.5">Perumahan Taman Cikas, Kel. Pekayon Jaya, Kec. Bekasi Selatan, Kota Bekasi</p>
+            </div>
+            <div class="flex items-center gap-4">
+                <button onclick="openMyTicketsModal()" class="text-teal-400 hover:underline font-bold">Cek E-Tiket Saya</button>
+                <button onclick="openAdminModal()" class="text-amber-400 hover:underline font-bold">Login Admin</button>
+                <button onclick="openSheetSettingsModal()" class="text-slate-400 hover:text-white">Pengaturan API</button>
+            </div>
+        </div>
+    </footer>
+
+
+    <!-- ================= MODAL LOGIN & DASHBOARD ADMIN ================= -->
+    <div id="admin-modal" class="fixed inset-0 z-[65] hidden overflow-y-auto no-print" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-slate-950/80 backdrop-blur-xs" onclick="closeAdminModal()"></div>
+        <div class="flex min-h-full items-center justify-center p-3 sm:p-6">
+            <div class="relative w-full max-w-6xl bg-white rounded-3xl p-5 sm:p-7 shadow-2xl border border-slate-200 space-y-6">
+                <!-- Modal Header -->
+                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-11 h-11 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center">
+                            <i data-lucide="shield-check" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg sm:text-xl font-extrabold text-slate-900">Panel Admin — Cikas Sport Center</h3>
+                            <p class="text-xs text-slate-500">Autentikasi username &amp; password terhubung ke sheet <code class="font-mono bg-slate-100 px-1.5 py-0.5 rounded">Admin_Cikas</code> di Google Sheets</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button type="button" id="btn-admin-logout" onclick="logoutAdmin()" class="hidden px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-extrabold flex items-center gap-1.5">
+                            <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+                            <span>Logout</span>
+                        </button>
+                        <button type="button" onclick="closeAdminModal()" class="p-2 rounded-xl bg-slate-100 text-slate-500 hover:text-slate-900">
+                            <i data-lucide="x" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- FORM LOGIN ADMIN -->
+                <form id="admin-login-form" onsubmit="handleAdminLogin(event)" class="max-w-md mx-auto py-4 space-y-4">
+                    <div class="p-4 rounded-2xl bg-amber-50/80 border border-amber-200 text-xs text-amber-900 space-y-1">
+                        <p class="font-extrabold">Login Pengurus / Admin RW 025</p>
+                        <p>Masukkan username dan password admin yang terdaftar pada tab <code class="font-mono font-bold">Admin_Cikas</code> di Google Sheet Anda.</p>
+                    </div>
+
+                    <div>
+                        <label for="admin-username" class="block text-xs font-bold text-slate-700 mb-1">Username Admin <span class="text-rose-500">*</span></label>
+                        <div class="relative">
+                            <i data-lucide="user" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                            <input type="text" id="admin-username" required placeholder="Masukkan username admin"
+                                class="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="admin-password" class="block text-xs font-bold text-slate-700 mb-1">Password Admin <span class="text-rose-500">*</span></label>
+                        <div class="relative">
+                            <i data-lucide="lock" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                            <input type="password" id="admin-password" required placeholder="Masukkan password admin"
+                                class="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white">
+                        </div>
+                    </div>
+
+                    <button type="submit" id="btn-admin-login-submit"
+                        class="w-full py-3 px-5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-amber-300 font-extrabold text-sm shadow-lg flex items-center justify-center gap-2 transition-all active:scale-[0.99]">
+                        <i data-lucide="key-round" class="w-4 h-4"></i>
+                        <span>Masuk ke Halaman Admin</span>
+                    </button>
+                </form>
+
+                <!-- DASHBOARD ADMIN (SETELAH LOGIN) -->
+                <div id="admin-dashboard-view" class="hidden space-y-5">
+                    <!-- Top Summary & Export Toolbar -->
+                    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-200/80">
+                        <div class="flex flex-wrap items-center gap-3 text-xs">
+                            <span class="px-3 py-1.5 rounded-xl bg-slate-900 text-amber-300 font-extrabold" id="admin-active-user-badge">
+                                Admin: -
+                            </span>
+                            <span class="px-3 py-1.5 rounded-xl bg-white border border-slate-200 font-bold text-slate-700" id="admin-stat-total">
+                                Total Data: 0
+                            </span>
+                            <span class="px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 font-bold text-emerald-800" id="admin-stat-revenue">
+                                Omzet Aktif: Rp 0
+                            </span>
+                        </div>
+
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button type="button" onclick="syncFromGoogleSheets(true)"
+                                class="px-3.5 py-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-300 text-slate-800 text-xs font-extrabold flex items-center gap-1.5">
+                                <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-teal-600"></i>
+                                <span>Refresh Sheet</span>
+                            </button>
+                            <button type="button" onclick="exportAdminBookingsExcel()"
+                                class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold flex items-center gap-1.5 shadow-xs">
+                                <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
+                                <span>Download Excel (.xlsx)</span>
+                            </button>
+                            <button type="button" onclick="exportAdminBookingsPDF()"
+                                class="px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-extrabold flex items-center gap-1.5 shadow-xs">
+                                <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+                                <span>Download PDF (.pdf)</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Filter Pencarian, Fasilitas & Status -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                        <div class="relative lg:col-span-2">
+                            <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                            <input type="text" id="admin-filter-search" oninput="renderAdminBookingTable()"
+                                placeholder="Cari kode (#CKS-2026-...), nama pemesan, blok rumah, atau No. WA..."
+                                class="w-full pl-10 pr-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white">
+                        </div>
+
+                        <div>
+                            <select id="admin-filter-facility" onchange="renderAdminBookingTable()"
+                                class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-500">
+                                <option value="all">Semua Fasilitas</option>
+                                <option value="tennis">Lapangan Tenis</option>
+                                <option value="pool">Kolam Renang</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <select id="admin-filter-status" onchange="renderAdminBookingTable()"
+                                class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-500">
+                                <option value="all">Semua Status</option>
+                                <option value="Aktif">Aktif</option>
+                                <option value="Dibatalkan">Dibatalkan</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Tabel Booking List -->
+                    <div class="overflow-x-auto rounded-2xl border border-slate-200 max-h-[52vh]">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead class="bg-slate-900 text-white sticky top-0 z-10">
+                                <tr>
+                                    <th class="py-3 px-3.5 font-extrabold">Kode</th>
+                                    <th class="py-3 px-3.5 font-extrabold">Tanggal &amp; Jadwal</th>
+                                    <th class="py-3 px-3.5 font-extrabold">Fasilitas</th>
+                                    <th class="py-3 px-3.5 font-extrabold">Pemesan &amp; Blok</th>
+                                    <th class="py-3 px-3.5 font-extrabold">Pembayaran</th>
+                                    <th class="py-3 px-3.5 font-extrabold text-right">Total</th>
+                                    <th class="py-3 px-3.5 font-extrabold text-center">Status</th>
+                                    <th class="py-3 px-3.5 font-extrabold text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-booking-tbody" class="divide-y divide-slate-100 bg-white">
+                                <!-- Diisi via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MODAL EDIT BOOKING (ADMIN) ================= -->
+    <div id="admin-edit-modal" class="fixed inset-0 z-[72] hidden overflow-y-auto no-print" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-slate-950/75 backdrop-blur-xs" onclick="closeAdminEditModal()"></div>
+        <div class="flex min-h-full items-center justify-center p-4">
+            <form id="admin-edit-form" onsubmit="submitAdminEditBooking(event)" class="relative w-full max-w-xl bg-white rounded-3xl p-6 shadow-2xl border border-slate-200 space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div>
+                        <span class="text-[10px] font-extrabold uppercase tracking-wider text-amber-600">Mode Edit Admin</span>
+                        <h3 class="text-lg font-extrabold text-slate-900">Edit Data Reservasi <span id="edit-code-display" class="font-mono text-teal-700"></span></h3>
+                    </div>
+                    <button type="button" onclick="closeAdminEditModal()" class="p-2 rounded-xl bg-slate-100 text-slate-500 hover:text-slate-900">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+
+                <input type="hidden" id="edit-original-code">
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div>
+                        <label for="edit-date" class="block font-bold text-slate-700 mb-1">Tanggal</label>
+                        <input type="date" id="edit-date" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-bold">
+                    </div>
+                    <div>
+                        <label for="edit-status" class="block font-bold text-slate-700 mb-1">Status Reservasi</label>
+                        <select id="edit-status" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-bold">
+                            <option value="Aktif">Aktif</option>
+                            <option value="Dibatalkan">Dibatalkan</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="text-xs">
+                    <label for="edit-schedule-summary" class="block font-bold text-slate-700 mb-1">Ringkasan Jadwal / Sesi</label>
+                    <input type="text" id="edit-schedule-summary" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-medium">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div>
+                        <label for="edit-hours" class="block font-bold text-slate-700 mb-1">Slot Jam Tenis (pisah koma, mis: 07:00, 08:00)</label>
+                        <input type="text" id="edit-hours" placeholder="Kosongkan jika kolam renang" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-mono">
+                    </div>
+                    <div>
+                        <label for="edit-total-people" class="block font-bold text-slate-700 mb-1">Jumlah Orang (Kolam Renang)</label>
+                        <input type="number" min="0" max="40" id="edit-total-people" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-bold">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div>
+                        <label for="edit-customer-name" class="block font-bold text-slate-700 mb-1">Nama Pemesan</label>
+                        <input type="text" id="edit-customer-name" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl">
+                    </div>
+                    <div>
+                        <label for="edit-whatsapp" class="block font-bold text-slate-700 mb-1">No. WhatsApp</label>
+                        <input type="text" id="edit-whatsapp" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div>
+                        <label for="edit-visitor-status" class="block font-bold text-slate-700 mb-1">Kategori Pengunjung</label>
+                        <select id="edit-visitor-status" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-bold">
+                            <option value="warga">Warga RW 025</option>
+                            <option value="tamu">Tamu Umum</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="edit-address-info" class="block font-bold text-slate-700 mb-1">Blok Rumah / Alamat</label>
+                        <input type="text" id="edit-address-info" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                    <div>
+                        <label for="edit-payment-method" class="block font-bold text-slate-700 mb-1">Metode Bayar</label>
+                        <input type="text" id="edit-payment-method" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl">
+                    </div>
+                    <div>
+                        <label for="edit-payment-status" class="block font-bold text-slate-700 mb-1">Status Bayar</label>
+                        <input type="text" id="edit-payment-status" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl">
+                    </div>
+                    <div>
+                        <label for="edit-total-amount" class="block font-bold text-slate-700 mb-1">Total Biaya (Rp)</label>
+                        <input type="number" min="0" step="500" id="edit-total-amount" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-bold">
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100">
+                    <button type="button" onclick="closeAdminEditModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold">
+                        Batal
+                    </button>
+                    <button type="submit" id="btn-save-admin-edit" class="px-5 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-extrabold flex items-center gap-1.5 shadow-md">
+                        <i data-lucide="save" class="w-4 h-4"></i>
+                        <span>Simpan Perubahan ke Sheet</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= TOAST NOTIFICATION ================= -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-[100] flex flex-col gap-2 max-w-sm w-[calc(100%-2.5rem)] pointer-events-none no-print"></div>
+
+    <!-- ================= MODAL TIKET SAYA (MANAJEMEN E-TIKET) ================= -->
+    <div id="my-tickets-modal" class="fixed inset-0 z-50 hidden overflow-y-auto no-print" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-slate-950/75 backdrop-blur-xs" onclick="closeMyTicketsModal()"></div>
+        <div class="flex min-h-full items-center justify-center p-4">
+            <div class="relative w-full max-w-2xl bg-white rounded-3xl p-5 sm:p-7 shadow-2xl border border-slate-200 space-y-5">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-2xl bg-teal-100 text-teal-700 flex items-center justify-center">
+                            <i data-lucide="ticket" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-extrabold text-slate-900">Tiket &amp; Riwayat Reservasi Saya</h3>
+                            <p class="text-xs text-slate-500">Cari berdasarkan Kode Booking (#CKS-2026-XXXX) atau Nomor WhatsApp</p>
+                        </div>
+                    </div>
+                    <button onclick="closeMyTicketsModal()" class="p-2 rounded-xl bg-slate-100 text-slate-500 hover:text-slate-900">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+
+                <!-- Pencarian Tiket dari Database Google Sheets -->
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <div class="relative flex-1">
+                        <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                        <input type="text" id="ticket-search-input" oninput="renderMyTicketsList()"
+                            placeholder="Ketik kode #CKS-2026-... atau No. WhatsApp untuk cari tiket..."
+                            class="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white">
+                    </div>
+                    <button type="button" onclick="syncFromGoogleSheets(true)"
+                        class="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold flex items-center justify-center gap-1.5 shrink-0">
+                        <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                        <span>Sinkron Data</span>
+                    </button>
+                </div>
+
+                <!-- Daftar Kartu E-Tiket -->
+                <div id="my-tickets-list" class="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
+                    <!-- Diisi via JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MODAL DETAIL & CETAK E-TIKET ================= -->
+    <div id="print-ticket-modal" class="fixed inset-0 z-[60] hidden overflow-y-auto" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-slate-950/80 backdrop-blur-xs no-print" onclick="closePrintTicketModal()"></div>
+        <div class="flex min-h-full items-center justify-center p-4">
+            <div id="print-ticket-card" class="relative w-full max-w-md bg-white rounded-3xl overflow-hidden shadow-2xl border border-slate-200">
+                <!-- Header Tiket -->
+                <div class="bg-slate-900 text-white p-6 text-center relative">
+                    <button onclick="closePrintTicketModal()" class="no-print absolute right-4 top-4 p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                    <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-500/20 border border-teal-400/30 text-teal-300 text-[11px] font-bold mb-2">
+                        E-TIKET RESMI • RW 025 TAMAN CIKAS
+                    </div>
+                    <h3 class="text-xl font-extrabold tracking-tight">Cikas Sport Center</h3>
+                    <p class="text-xs text-slate-400 mt-0.5">Pekayon Jaya, Bekasi Selatan</p>
+
+                    <div class="mt-4 py-2.5 px-4 rounded-2xl bg-white/10 border border-white/15 inline-block">
+                        <span class="block text-[10px] uppercase tracking-widest text-slate-300">Kode Booking</span>
+                        <span id="pt-code" class="text-xl font-mono font-extrabold text-teal-300 tracking-wider">#CKS-2026-0000</span>
+                    </div>
+                </div>
+
+                <!-- Body Tiket -->
+                <div id="print-ticket-body" class="p-6 space-y-4 text-xs">
+                    <!-- Diisi via JavaScript -->
+                </div>
+
+                <!-- Footer Tombol Cetak -->
+                <div class="p-5 bg-slate-50 border-t border-slate-200 flex items-center gap-3 no-print">
+                    <button type="button" onclick="window.print()"
+                        class="flex-1 py-3 px-4 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-md">
+                        <i data-lucide="printer" class="w-4 h-4"></i>
+                        <span>Cetak / Simpan PDF</span>
+                    </button>
+                    <button type="button" onclick="closePrintTicketModal()"
+                        class="py-3 px-4 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-xs">
+                        Tutup
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MODAL KONFIRMASI PEMBATALAN ================= -->
+    <div id="cancel-modal" class="fixed inset-0 z-[70] hidden overflow-y-auto no-print" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-slate-950/75 backdrop-blur-xs" onclick="closeCancelModal()"></div>
+        <div class="flex min-h-full items-center justify-center p-4">
+            <div class="relative w-full max-w-md bg-white rounded-3xl p-6 shadow-2xl border border-slate-200 text-center space-y-4">
+                <div class="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto">
+                    <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-extrabold text-slate-900">Batalkan Jadwal Reservasi?</h3>
+                    <p class="text-xs text-slate-600 mt-1 leading-relaxed">
+                        Anda akan membatalkan tiket <strong id="cancel-ticket-code" class="text-slate-900 font-mono">#CKS-2026-XXXX</strong>. Status di Google Sheets akan diperbarui menjadi <strong>Dibatalkan</strong> dan slot/kuota langsung dibuka kembali.
+                    </p>
+                </div>
+                <div class="flex items-center justify-center gap-3 pt-2">
+                    <button type="button" onclick="closeCancelModal()"
+                        class="flex-1 py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs">
+                        Kembali
+                    </button>
+                    <button type="button" id="confirm-cancel-action"
+                        class="flex-1 py-2.5 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs shadow-md">
+                        Ya, Batalkan Jadwal
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MODAL PENGATURAN KONEKSI GOOGLE SHEETS ================= -->
+    <div id="sheet-settings-modal" class="fixed inset-0 z-[75] hidden overflow-y-auto no-print" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-slate-950/75 backdrop-blur-xs" onclick="closeSheetSettingsModal()"></div>
+        <div class="flex min-h-full items-center justify-center p-4">
+            <div class="relative w-full max-w-lg bg-white rounded-3xl p-6 sm:p-7 shadow-2xl border border-slate-200">
+                <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                            <i data-lucide="sheet" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-base sm:text-lg font-extrabold text-slate-900">Koneksi Google Sheets Online</h3>
+                            <p class="text-xs text-slate-500">Endpoint Google Apps Script Web App aktif</p>
+                        </div>
+                    </div>
+                    <button onclick="closeSheetSettingsModal()" class="p-2 rounded-xl bg-slate-100 text-slate-500 hover:text-slate-800">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+
+                <div class="space-y-4 text-xs">
+                    <div class="p-3.5 rounded-2xl bg-emerald-50/70 border border-emerald-200 text-slate-700 leading-relaxed space-y-1">
+                        <p class="font-bold text-emerald-900">Status Endpoint Terpasang:</p>
+                        <p>Aplikasi sudah dikonfigurasi dengan URL Google Apps Script default milik Cikas Sport Center. Anda dapat menguji ulang koneksi atau mengganti URL jika melakukan deployment baru.</p>
+                    </div>
+
+                    <div>
+                        <label for="input-gas-url" class="block font-bold text-slate-700 mb-1.5">URL Web App Google Apps Script (<code>/exec</code>)</label>
+                        <input type="url" id="input-gas-url"
+                            class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white">
+                    </div>
+
+                    <div class="flex flex-wrap items-center justify-between gap-2 pt-2">
+                        <button type="button" onclick="resetGoogleSheetUrl()"
+                            class="px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition-colors">
+                            Gunakan URL Default
+                        </button>
+                        <button type="button" onclick="saveAndTestGoogleSheetUrl()"
+                            class="px-4 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-extrabold flex items-center gap-1.5 shadow-md transition-colors">
+                            <i data-lucide="plug-zap" class="w-4 h-4"></i>
+                            <span>Simpan &amp; Sinkronkan</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= JAVASCRIPT APPLICATION LOGIC ================= -->
+    <script>
+        // =========================================================================
+        // KONFIGURASI URL GOOGLE APPS SCRIPT (TERTANAM DEFAULT)
+        // =========================================================================
+        const DEFAULT_GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby7TxalCPykQWlKNMItn7RVtLrf2cTfmWuzRvsbZkgTTlHdSbBfVw8cEdAdIHrMyCrDag/exec";
+
+        const STORAGE_KEY = 'cikas_sport_center_tickets_v2';
+        const MY_CODES_KEY = 'cikas_sport_center_my_codes_v2';
+        const GAS_URL_OVERRIDE_KEY = 'cikas_sport_center_gas_override';
+
+        // Tarif Resmi RW 025 Taman Cikas
+        const RATES = {
+            tennis: {
+                warga: 35000,
+                tamu: 60000
+            },
+            pool: {
+                warga: 15000,
+                tamu: 25000
+            }
+        };
+
+        // Data Lapangan Tenis Taman Cikas
+        const TENNIS_COURTS = {
+            'court-1': {
+                id: 'court-1',
+                name: 'Lapangan Tenis — Court 1',
+                shortName: 'Court 1',
+                note: 'Lapangan Utama (Hardcourt + Penerangan Malam)'
+            },
+            'court-2': {
+                id: 'court-2',
+                name: 'Lapangan Tenis — Court 2',
+                shortName: 'Court 2',
+                note: 'Lapangan Timur (Hardcourt)'
+            }
+        };
+
+        // Slot Jam Operasional Tenis (06:00 - 21:00 -> 15 slot per 1 jam)
+        const TENNIS_HOURS = [
+            '06:00', '07:00', '08:00', '09:00', '10:00',
+            '11:00', '12:00', '13:00', '14:00', '15:00',
+            '16:00', '17:00', '18:00', '19:00', '20:00'
+        ];
+
+        // Sesi Kolam Renang Taman Cikas (Maksimal 40 orang per sesi)
+        const MAX_POOL_QUOTA = 40;
+        const POOL_SESSIONS = [
+            {
+                id: 'sesi-pagi',
+                title: 'Sesi Pagi',
+                time: '07:00 - 11:00 WIB',
+                desc: 'Kolam Dewasa & Kolam Anak'
+            },
+            {
+                id: 'sesi-sore',
+                title: 'Sesi Sore',
+                time: '14:00 - 18:00 WIB',
+                desc: 'Kolam Dewasa & Kolam Anak'
+            }
+        ];
+
+        // State Aplikasi
+        let activeTab = 'tennis'; // 'tennis' | 'pool'
+        let visitorStatus = 'warga'; // 'warga' | 'tamu'
+        let sharedDate = '';
+        let selectedCourt = 'court-1';
+        let selectedTennisHours = [];
+        let selectedPoolSession = 'sesi-pagi';
+        let poolAdult = 1;
+        let poolChild = 0;
+        let poolToddler = 0;
+
+        let ticketToCancel = null;
+        let isSyncing = false;
+
+        // =========================================================================
+        // HELPER KONEKSI GOOGLE SHEETS
+        // =========================================================================
+        function getActiveGasUrl() {
+            try {
+                const override = (localStorage.getItem(GAS_URL_OVERRIDE_KEY) || '').trim();
+                if (override) return override;
+            } catch (e) {}
+            return DEFAULT_GOOGLE_SCRIPT_URL.trim();
+        }
+
+        function updateConnectionStatusUI(state = 'loading') {
+            const dot = document.getElementById('connection-dot');
+            const label = document.getElementById('connection-label');
+            const banner = document.getElementById('sync-status-banner');
+            const bannerText = document.getElementById('banner-status-text');
+            const bannerIcon = document.getElementById('banner-icon');
+
+            if (state === 'connected') {
+                dot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400';
+                label.textContent = 'Terhubung ke Google Sheets';
+                banner.className = 'bg-emerald-50 border-b border-emerald-200 text-emerald-900 px-4 py-2 text-xs no-print transition-colors';
+                bannerIcon.className = 'w-4 h-4 text-emerald-600 shrink-0';
+                bannerText.innerHTML = '<strong>Terhubung ke Google Sheets (Real-Time):</strong> Jadwal Lapangan Tenis &amp; Kuota Kolam Renang tersinkronisasi langsung.';
+            } else if (state === 'error') {
+                dot.className = 'w-2.5 h-2.5 rounded-full bg-amber-400';
+                label.textContent = 'Mode Cadangan Lokal';
+                banner.className = 'bg-amber-50 border-b border-amber-200 text-amber-900 px-4 py-2 text-xs no-print transition-colors';
+                bannerIcon.className = 'w-4 h-4 text-amber-600 shrink-0';
+                bannerText.innerHTML = '<strong>Mode Cadangan Lokal:</strong> Tidak dapat menjangkau server Google Sheets saat ini. Menampilkan cache jadwal terakhir.';
+            } else {
+                dot.className = 'w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse';
+                label.textContent = 'Menghubungkan...';
+                banner.className = 'bg-slate-100 border-b border-slate-200 text-slate-700 px-4 py-2 text-xs no-print transition-colors';
+                bannerIcon.className = 'w-4 h-4 text-teal-600 shrink-0';
+                bannerText.textContent = 'Menyinkronkan jadwal Lapangan Tenis & Kolam Renang dengan Google Sheets...';
+            }
+        }
+
+        // =========================================================================
+        // HELPER TANGGAL, FORMAT RUPIAH & PENYIMPANAN
+        // =========================================================================
+        function getTodayDateStr() {
+            const now = new Date();
+            const y = now.getFullYear();
+            const m = String(now.getMonth() + 1).padStart(2, '0');
+            const d = String(now.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+
+        function formatIndoDate(dateStr) {
+            if (!dateStr) return '-';
+            const parts = dateStr.split('-');
+            if (parts.length !== 3) return dateStr;
+            const dateObj = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+            return dateObj.toLocaleDateString('id-ID', {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric'
+            });
+        }
+
+        function formatRupiah(num) {
+            return 'Rp ' + Number(num || 0).toLocaleString('id-ID');
+        }
+
+        function getNextHourLabel(startHour) {
+            const h = parseInt(startHour.split(':')[0], 10);
+            const next = String(h + 1).padStart(2, '0') + ':00';
+            return `${startHour} - ${next}`;
+        }
+
+        function getAllTickets() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                return raw ? JSON.parse(raw) : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function saveAllTickets(list) {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+                updateTicketBadge();
+            } catch (e) {
+                console.error('Gagal menyimpan cache lokal:', e);
+            }
+        }
+
+        function getMySavedCodes() {
+            try {
+                const raw = localStorage.getItem(MY_CODES_KEY);
+                return raw ? JSON.parse(raw) : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function addMySavedCode(code) {
+            const codes = getMySavedCodes();
+            if (!codes.includes(code)) {
+                codes.unshift(code);
+                try {
+                    localStorage.setItem(MY_CODES_KEY, JSON.stringify(codes));
+                } catch (e) {}
+            }
+            updateTicketBadge();
+        }
+
+        function updateTicketBadge() {
+            const all = getAllTickets();
+            const myCodes = getMySavedCodes();
+            const activeMine = all.filter(t => myCodes.includes(t.code) && t.status !== 'Dibatalkan');
+            const badge = document.getElementById('active-ticket-badge');
+            if (badge) {
+                badge.textContent = activeMine.length;
+            }
+        }
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const bgClass = type === 'error'
+                ? 'bg-rose-600 text-white border-rose-500'
+                : 'bg-slate-900 text-white border-teal-500';
+            const iconName = type === 'error' ? 'alert-circle' : 'check-circle-2';
+            const iconColor = type === 'error' ? 'text-white' : 'text-teal-400';
+
+            toast.className = `pointer-events-auto flex items-start gap-2.5 p-3.5 rounded-2xl border shadow-xl text-xs font-semibold transition-all duration-300 ${bgClass}`;
+            toast.innerHTML = `
+                <i data-lucide="${iconName}" class="w-4 h-4 ${iconColor} shrink-0 mt-0.5"></i>
+                <span class="leading-relaxed">${message}</span>
+            `;
+            container.appendChild(toast);
+            lucide.createIcons();
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(8px)';
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        // =========================================================================
+        // SINKRONISASI REAL-TIME KE GOOGLE SHEETS (GET & POST)
+        // =========================================================================
+        async function syncFromGoogleSheets(showNotification = false) {
+            const gasUrl = getActiveGasUrl();
+            if (!gasUrl) {
+                updateConnectionStatusUI('error');
+                return;
+            }
+
+            if (isSyncing) return;
+            isSyncing = true;
+            updateConnectionStatusUI('loading');
+
+            const syncIcon = document.getElementById('sync-icon');
+            if (syncIcon) syncIcon.classList.add('animate-spin');
+
+            try {
+                const separator = gasUrl.includes('?') ? '&' : '?';
+                const response = await fetch(`${gasUrl}${separator}action=getBookings&t=${Date.now()}`, {
+                    method: 'GET',
+                    redirect: 'follow'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP status ${response.status}`);
+                }
+
+                const result = await response.json();
+
+                if (result && result.status === 'success' && Array.isArray(result.data)) {
+                    const remoteTickets = result.data.map(row => {
+                        let parsedHours = [];
+                        if (Array.isArray(row.hours)) {
+                            parsedHours = row.hours.map(h => String(h).trim()).filter(Boolean);
+                        } else if (typeof row.hours === 'string' && row.hours.trim() !== '') {
+                            parsedHours = row.hours.split(',').map(h => h.trim()).filter(Boolean);
+                        }
+
+                        // Normalisasi tanggal jika berbentuk ISO timestamp dari Sheets
+                        let cleanDate = String(row.date || '').trim().replace(/^'/, '');
+                        if (cleanDate.includes('T')) {
+                            cleanDate = cleanDate.split('T')[0];
+                        }
+
+                        return {
+                            code: String(row.code || '').trim(),
+                            facilityType: String(row.facilityType || '').trim(),
+                            facilityName: String(row.facilityName || '').trim(),
+                            courtId: String(row.courtId || '').trim(),
+                            sessionId: String(row.sessionId || '').trim(),
+                            date: cleanDate,
+                            hours: parsedHours,
+                            scheduleSummary: String(row.scheduleSummary || '').trim(),
+                            totalPeople: Number(row.totalPeople || 0),
+                            visitorStatus: String(row.visitorStatus || 'warga').trim(),
+                            customerName: String(row.customerName || '').trim(),
+                            whatsapp: String(row.whatsapp || '').trim().replace(/^'/, ''),
+                            addressInfo: String(row.addressInfo || '').trim(),
+                            paymentMethod: String(row.paymentMethod || '').trim(),
+                            paymentStatus: String(row.paymentStatus || 'Lunas / Terverifikasi').trim(),
+                            totalAmount: Number(row.totalAmount || 0),
+                            status: String(row.status || 'Aktif').trim(),
+                            createdAt: String(row.createdAt || new Date().toISOString())
+                        };
+                    }).filter(item => item.code !== '');
+
+                    saveAllTickets(remoteTickets);
+
+                    // Hapus slot tenis yang dipilih user jika ternyata baru saja terisi di Google Sheets
+                    const occupiedNow = getOccupiedTennisHours(selectedCourt, sharedDate);
+                    selectedTennisHours = selectedTennisHours.filter(h => !occupiedNow.has(h));
+
+                    // Pastikan jumlah pengunjung kolam tidak melebihi sisa kuota terbaru
+                    const remQuota = getRemainingPoolQuota(sharedDate, selectedPoolSession);
+                    if (poolAdult + poolChild + poolToddler > remQuota) {
+                        poolAdult = remQuota > 0 ? 1 : 0;
+                        poolChild = 0;
+                        poolToddler = 0;
+                    }
+
+                    // Render ulang seluruh komponen UI
+                    renderTennisSlots();
+                    renderPoolSessions();
+                    syncPoolCountersUI();
+                    renderLiveAvailabilityBoard();
+                    updateReservationSummary();
+
+                    if (!document.getElementById('my-tickets-modal').classList.contains('hidden')) {
+                        renderMyTicketsList();
+                    }
+
+                    const nowTime = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                    const lastSyncEl = document.getElementById('last-sync-time');
+                    if (lastSyncEl) lastSyncEl.textContent = `Sinkron terakhir: ${nowTime} WIB`;
+
+                    updateConnectionStatusUI('connected');
+                    if (showNotification) {
+                        showToast('Jadwal berhasil diperbarui dari Google Sheets!', 'success');
+                    }
+                } else {
+                    throw new Error((result && result.message) || 'Format data Google Sheets tidak sesuai');
+                }
+            } catch (err) {
+                console.error('Gagal sinkronisasi Google Sheets:', err);
+                updateConnectionStatusUI('error');
+                if (showNotification) {
+                    showToast('Gagal terhubung ke Google Sheets. Menampilkan data cache lokal.', 'error');
+                }
+            } finally {
+                isSyncing = false;
+                if (syncIcon) syncIcon.classList.remove('animate-spin');
+            }
+        }
+
+        async function postToGoogleSheets(payload) {
+            const gasUrl = getActiveGasUrl();
+            if (!gasUrl) throw new Error('URL Google Apps Script kosong');
+
+            const response = await fetch(gasUrl, {
+                method: 'POST',
+                redirect: 'follow',
+                headers: {
+                    'Content-Type': 'text/plain;charset=utf-8'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const rawText = await response.text();
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${rawText.slice(0, 140)}`);
+            }
+
+            try {
+                return JSON.parse(rawText);
+            } catch (parseErr) {
+                throw new Error('Respons server bukan JSON valid (periksa deployment & izin Apps Script)');
+            }
+        }
+
+        // =========================================================================
+        // KALKULASI SLOT TERISI & SISA KUOTA DARI DATABASE
+        // =========================================================================
+        function getOccupiedTennisHours(courtId, dateStr) {
+            const occupiedMap = new Map(); // hour -> booking object
+            const all = getAllTickets();
+            all.forEach(t => {
+                if (
+                    t.facilityType === 'tennis' &&
+                    t.courtId === courtId &&
+                    t.date === dateStr &&
+                    t.status !== 'Dibatalkan'
+                ) {
+                    (t.hours || []).forEach(h => {
+                        occupiedMap.set(h, t);
+                    });
+                }
+            });
+            return occupiedMap;
+        }
+
+        function getUsedPoolQuota(dateStr, sessionId) {
+            const all = getAllTickets();
+            let used = 0;
+            all.forEach(t => {
+                if (
+                    t.facilityType === 'pool' &&
+                    t.date === dateStr &&
+                    t.sessionId === sessionId &&
+                    t.status !== 'Dibatalkan'
+                ) {
+                    used += Number(t.totalPeople || 0);
+                }
+            });
+            return used;
+        }
+
+        function getRemainingPoolQuota(dateStr, sessionId) {
+            return Math.max(0, MAX_POOL_QUOTA - getUsedPoolQuota(dateStr, sessionId));
+        }
+
+        // =========================================================================
+        // INTERAKSI UI: STATUS PENGUNJUNG, TAB, TANGGAL, SLOT & KUOTA
+        // =========================================================================
+        function setVisitorStatus(status) {
+            visitorStatus = status;
+
+            const btnWarga = document.getElementById('btn-status-warga');
+            const btnTamu = document.getElementById('btn-status-tamu');
+            const labelAddress = document.getElementById('label-address');
+            const inputAddress = document.getElementById('input-address');
+
+            if (status === 'warga') {
+                btnWarga.className = 'flex items-start gap-3 p-3.5 rounded-2xl border-2 border-teal-600 bg-teal-50/70 text-left transition-all shadow-xs';
+                btnTamu.className = 'flex items-start gap-3 p-3.5 rounded-2xl border-2 border-slate-200 bg-white hover:border-slate-300 text-left transition-all';
+                labelAddress.innerHTML = 'Blok &amp; Nomor Rumah (Warga Taman Cikas RW 025) <span class="text-rose-500">*</span>';
+                inputAddress.placeholder = 'Contoh: Blok C4 No. 12';
+            } else {
+                btnTamu.className = 'flex items-start gap-3 p-3.5 rounded-2xl border-2 border-slate-800 bg-slate-100/80 text-left transition-all shadow-xs';
+                btnWarga.className = 'flex items-start gap-3 p-3.5 rounded-2xl border-2 border-slate-200 bg-white hover:border-slate-300 text-left transition-all';
+                labelAddress.innerHTML = 'Alamat Lengkap / Asal Instansi (Tamu Umum) <span class="text-rose-500">*</span>';
+                inputAddress.placeholder = 'Contoh: Kemang Pratama / Jl. Pekayon Raya No. 45';
+            }
+
+            // Update badge tarif
+            document.getElementById('tennis-rate-badge').textContent = `${formatRupiah(RATES.tennis[visitorStatus])} / jam`;
+            const poolRateStr = formatRupiah(RATES.pool[visitorStatus]);
+            document.getElementById('pool-rate-badge').textContent = `${poolRateStr} / orang`;
+            document.querySelectorAll('.pool-unit-price').forEach(el => {
+                el.textContent = poolRateStr;
+            });
+
+            updateReservationSummary();
+        }
+
+        function jumpToBooking(tabName) {
+            switchMainTab(tabName, true);
+            document.getElementById('booking-workspace').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function switchMainTab(tabName, resetSelection = false) {
+            activeTab = tabName;
+
+            const btnTennis = document.getElementById('tab-btn-tennis');
+            const btnPool = document.getElementById('tab-btn-pool');
+            const panelTennis = document.getElementById('panel-tennis');
+            const panelPool = document.getElementById('panel-pool');
+
+            if (tabName === 'tennis') {
+                btnTennis.className = 'flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-xl font-extrabold text-xs sm:text-sm bg-slate-900 text-teal-300 shadow-md transition-all';
+                btnPool.className = 'flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-xl font-extrabold text-xs sm:text-sm text-slate-600 hover:bg-slate-100 transition-all';
+                panelTennis.classList.remove('hidden');
+                panelPool.classList.add('hidden');
+                if (resetSelection) selectedTennisHours = [];
+                selectTennisCourt(selectedCourt);
+            } else {
+                btnPool.className = 'flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-xl font-extrabold text-xs sm:text-sm bg-sky-600 text-white shadow-md transition-all';
+                btnTennis.className = 'flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-xl font-extrabold text-xs sm:text-sm text-slate-600 hover:bg-slate-100 transition-all';
+                panelPool.classList.remove('hidden');
+                panelTennis.classList.add('hidden');
+                renderPoolSessions();
+                syncPoolCountersUI();
+            }
+
+            updateReservationSummary();
+        }
+
+        function onSharedDateChange(newDate) {
+            if (!newDate) return;
+            sharedDate = newDate;
+            selectedTennisHours = [];
+
+            ['tennis-date-input', 'pool-date-input', 'board-date-input'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el && el.value !== newDate) el.value = newDate;
+            });
+
+            renderTennisSlots();
+            renderPoolSessions();
+            syncPoolCountersUI();
+            renderLiveAvailabilityBoard();
+            updateReservationSummary();
+        }
+
+        function selectTennisCourt(courtId) {
+            selectedCourt = courtId;
+            selectedTennisHours = [];
+
+            const btn1 = document.getElementById('btn-court-1');
+            const btn2 = document.getElementById('btn-court-2');
+
+            if (courtId === 'court-1') {
+                btn1.className = 'py-2.5 px-3 rounded-xl border-2 border-teal-600 bg-teal-50 text-teal-900 text-xs font-extrabold transition-all flex flex-col items-center justify-center';
+                btn2.className = 'py-2.5 px-3 rounded-xl border-2 border-slate-200 bg-white text-slate-600 hover:border-slate-300 text-xs font-extrabold transition-all flex flex-col items-center justify-center';
+            } else {
+                btn2.className = 'py-2.5 px-3 rounded-xl border-2 border-teal-600 bg-teal-50 text-teal-900 text-xs font-extrabold transition-all flex flex-col items-center justify-center';
+                btn1.className = 'py-2.5 px-3 rounded-xl border-2 border-slate-200 bg-white text-slate-600 hover:border-slate-300 text-xs font-extrabold transition-all flex flex-col items-center justify-center';
+            }
+
+            renderTennisSlots();
+            updateReservationSummary();
+        }
+
+        function renderTennisSlots() {
+            const grid = document.getElementById('tennis-slots-grid');
+            if (!grid) return;
+
+            const occupiedMap = getOccupiedTennisHours(selectedCourt, sharedDate);
+            const todayStr = getTodayDateStr();
+            const currentHour = new Date().getHours();
+
+            grid.innerHTML = TENNIS_HOURS.map(hour => {
+                const slotHourNum = parseInt(hour.split(':')[0], 10);
+                const isPastToday = (sharedDate === todayStr && slotHourNum <= currentHour);
+                const bookingInfo = occupiedMap.get(hour);
+                const isSelected = selectedTennisHours.includes(hour);
+
+                if (bookingInfo) {
+                    return `
+                        <button type="button" disabled title="Terisi oleh ${bookingInfo.customerName}"
+                            class="py-2.5 px-2 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 cursor-not-allowed flex flex-col items-center justify-center gap-0.5">
+                            <span class="text-xs font-extrabold line-through">${hour}</span>
+                            <span class="text-[10px] font-bold flex items-center gap-1">
+                                <i data-lucide="lock" class="w-2.5 h-2.5"></i> Terisi
+                            </span>
+                        </button>
+                    `;
+                }
+
+                if (isPastToday) {
+                    return `
+                        <button type="button" disabled title="Jam sudah terlewati"
+                            class="py-2.5 px-2 rounded-xl border border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed flex flex-col items-center justify-center gap-0.5">
+                            <span class="text-xs font-bold">${hour}</span>
+                            <span class="text-[10px]">Lewat</span>
+                        </button>
+                    `;
+                }
+
+                if (isSelected) {
+                    return `
+                        <button type="button" onclick="toggleTennisHour('${hour}')"
+                            class="py-2.5 px-2 rounded-xl border-2 border-teal-600 bg-teal-600 text-white shadow-sm flex flex-col items-center justify-center gap-0.5 transition-all active:scale-95">
+                            <span class="text-xs font-extrabold">${hour}</span>
+                            <span class="text-[10px] font-bold text-teal-100">Dipilih ✓</span>
+                        </button>
+                    `;
+                }
+
+                return `
+                    <button type="button" onclick="toggleTennisHour('${hour}')"
+                        class="py-2.5 px-2 rounded-xl border border-slate-300 bg-white hover:border-teal-500 hover:bg-teal-50/50 text-slate-800 flex flex-col items-center justify-center gap-0.5 transition-all active:scale-95">
+                        <span class="text-xs font-extrabold">${hour}</span>
+                        <span class="text-[10px] text-slate-500">Tersedia</span>
+                    </button>
+                `;
+            }).join('');
+
+            lucide.createIcons();
+        }
+
+        function toggleTennisHour(hour) {
+            const idx = selectedTennisHours.indexOf(hour);
+            if (idx >= 0) {
+                selectedTennisHours.splice(idx, 1);
+            } else {
+                selectedTennisHours.push(hour);
+                selectedTennisHours.sort();
+            }
+            renderTennisSlots();
+            updateReservationSummary();
+        }
+
+        function renderPoolSessions() {
+            const grid = document.getElementById('pool-sessions-grid');
+            if (!grid) return;
+
+            grid.innerHTML = POOL_SESSIONS.map(sess => {
+                const used = getUsedPoolQuota(sharedDate, sess.id);
+                const remaining = Math.max(0, MAX_POOL_QUOTA - used);
+                const isFull = remaining === 0;
+                const isSelected = selectedPoolSession === sess.id;
+                const pct = Math.min(100, Math.round((used / MAX_POOL_QUOTA) * 100));
+
+                return `
+                    <button type="button" onclick="selectPoolSession('${sess.id}')" ${isFull ? 'disabled' : ''}
+                        class="p-4 rounded-2xl border-2 text-left transition-all ${
+                            isFull
+                                ? 'border-rose-200 bg-rose-50/70 opacity-75 cursor-not-allowed'
+                                : isSelected
+                                    ? 'border-sky-600 bg-sky-50/80 shadow-xs'
+                                    : 'border-slate-200 bg-white hover:border-sky-300'
+                        }">
+                        <div class="flex items-center justify-between">
+                            <span class="font-extrabold text-sm text-slate-900">${sess.title}</span>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
+                                isFull
+                                    ? 'bg-rose-600 text-white'
+                                    : remaining <= 10
+                                        ? 'bg-amber-100 text-amber-800'
+                                        : 'bg-sky-100 text-sky-800'
+                            }">
+                                ${isFull ? 'KUOTA PENUH' : `Sisa ${remaining} / ${MAX_POOL_QUOTA}`}
+                            </span>
+                        </div>
+                        <p class="text-xs font-bold text-sky-700 mt-1">${sess.time}</p>
+                        <div class="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden mt-2.5">
+                            <div class="h-full ${isFull ? 'bg-rose-500' : 'bg-sky-500'} transition-all" style="width: ${pct}%"></div>
+                        </div>
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function selectPoolSession(sessionId) {
+            selectedPoolSession = sessionId;
+            const remaining = getRemainingPoolQuota(sharedDate, sessionId);
+            if (poolAdult + poolChild + poolToddler > remaining) {
+                poolAdult = remaining > 0 ? 1 : 0;
+                poolChild = 0;
+                poolToddler = 0;
+            }
+            renderPoolSessions();
+            syncPoolCountersUI();
+            updateReservationSummary();
+        }
+
+        function adjustPoolVisitor(type, delta) {
+            const remaining = getRemainingPoolQuota(sharedDate, selectedPoolSession);
+            const currentTotal = poolAdult + poolChild + poolToddler;
+
+            if (delta > 0 && currentTotal >= remaining) {
+                showToast(`Maksimal sisa kuota sesi ini adalah ${remaining} orang.`, 'error');
+                return;
+            }
+
+            if (type === 'adult') {
+                poolAdult = Math.max(0, poolAdult + delta);
+            } else if (type === 'child') {
+                poolChild = Math.max(0, poolChild + delta);
+            } else if (type === 'toddler') {
+                poolToddler = Math.max(0, poolToddler + delta);
+            }
+
+            syncPoolCountersUI();
+            updateReservationSummary();
+        }
+
+        function syncPoolCountersUI() {
+            const remaining = getRemainingPoolQuota(sharedDate, selectedPoolSession);
+            document.getElementById('count-adult').textContent = poolAdult;
+            document.getElementById('count-child').textContent = poolChild;
+            document.getElementById('count-toddler').textContent = poolToddler;
+            document.getElementById('pool-quota-warning').textContent = `Sisa kuota sesi ini: ${remaining} orang`;
+        }
+
+        function updateReservationSummary() {
+            const summaryFacility = document.getElementById('summary-facility');
+            const summaryDate = document.getElementById('summary-date');
+            const summarySchedule = document.getElementById('summary-schedule');
+            const summaryRateInfo = document.getElementById('summary-rate-info');
+            const summaryTotalPrice = document.getElementById('summary-total-price');
+            const btnSubmit = document.getElementById('btn-confirm-booking');
+
+            summaryDate.textContent = formatIndoDate(sharedDate);
+            const statusLabel = visitorStatus === 'warga' ? 'Warga RW 025' : 'Tamu / Umum';
+
+            if (activeTab === 'tennis') {
+                const courtObj = TENNIS_COURTS[selectedCourt];
+                const rate = RATES.tennis[visitorStatus];
+                summaryFacility.textContent = courtObj.name;
+                summaryRateInfo.textContent = `${statusLabel} (${formatRupiah(rate)}/jam)`;
+
+                if (selectedTennisHours.length === 0) {
+                    summarySchedule.textContent = 'Belum ada slot jam dipilih';
+                    summarySchedule.className = 'font-bold text-amber-300 text-right';
+                    summaryTotalPrice.textContent = 'Rp 0';
+                    btnSubmit.disabled = true;
+                } else {
+                    const labels = selectedTennisHours.map(h => getNextHourLabel(h));
+                    summarySchedule.textContent = `${labels.join(', ')} (${selectedTennisHours.length} Jam)`;
+                    summarySchedule.className = 'font-bold text-emerald-300 text-right';
+                    summaryTotalPrice.textContent = formatRupiah(selectedTennisHours.length * rate);
+                    btnSubmit.disabled = false;
+                }
+            } else {
+                const sessObj = POOL_SESSIONS.find(s => s.id === selectedPoolSession);
+                const rate = RATES.pool[visitorStatus];
+                const remaining = getRemainingPoolQuota(sharedDate, selectedPoolSession);
+                const totalVisitors = poolAdult + poolChild + poolToddler;
+                const paidVisitors = poolAdult + poolChild;
+
+                summaryFacility.textContent = 'Kolam Renang Taman Cikas';
+                summaryRateInfo.textContent = `${statusLabel} (${formatRupiah(rate)}/org)`;
+
+                if (totalVisitors === 0 || remaining === 0) {
+                    summarySchedule.textContent = remaining === 0 ? 'Kuota sesi penuh' : 'Pilih minimal 1 pengunjung';
+                    summarySchedule.className = 'font-bold text-amber-300 text-right';
+                    summaryTotalPrice.textContent = 'Rp 0';
+                    btnSubmit.disabled = true;
+                } else {
+                    const parts = [];
+                    if (poolAdult > 0) parts.push(`${poolAdult} Dewasa`);
+                    if (poolChild > 0) parts.push(`${poolChild} Anak`);
+                    if (poolToddler > 0) parts.push(`${poolToddler} Balita Gratis`);
+                    summarySchedule.textContent = `${sessObj.title} (${sessObj.time}) • ${parts.join(', ')}`;
+                    summarySchedule.className = 'font-bold text-sky-300 text-right';
+                    summaryTotalPrice.textContent = formatRupiah(paidVisitors * rate);
+                    btnSubmit.disabled = false;
+                }
+            }
+        }
+
+        // =========================================================================
+        // RENDER LIVE AVAILABILITY BOARD
+        // =========================================================================
+        function renderLiveAvailabilityBoard() {
+            // Court 1 & Court 2
+            ['court-1', 'court-2'].forEach((cId, index) => {
+                const occupiedMap = getOccupiedTennisHours(cId, sharedDate);
+                const countEl = document.getElementById(index === 0 ? 'board-court1-count' : 'board-court2-count');
+                const listEl = document.getElementById(index === 0 ? 'board-court1-list' : 'board-court2-list');
+
+                countEl.textContent = `${occupiedMap.size}/${TENNIS_HOURS.length} Terisi`;
+
+                if (occupiedMap.size === 0) {
+                    listEl.innerHTML = `
+                        <div class="p-3 rounded-xl bg-white border border-slate-200/70 text-slate-500 text-center">
+                            Semua slot jam (06:00 – 21:00) masih tersedia.
+                        </div>
+                    `;
+                } else {
+                    const entries = Array.from(occupiedMap.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+                    listEl.innerHTML = entries.map(([hour, t]) => `
+                        <div class="p-2.5 rounded-xl bg-white border border-rose-200/80 flex items-center justify-between gap-2">
+                            <div>
+                                <span class="font-extrabold text-rose-700">${getNextHourLabel(hour)}</span>
+                                <p class="text-[11px] text-slate-600 truncate max-w-[160px]">${t.customerName} (${t.visitorStatus === 'warga' ? 'Warga' : 'Tamu'})</p>
+                            </div>
+                            <span class="px-2 py-0.5 rounded-md bg-rose-100 text-rose-700 text-[10px] font-bold">Terisi</span>
+                        </div>
+                    `).join('');
+                }
+            });
+
+            // Kolam Renang
+            const poolListEl = document.getElementById('board-pool-list');
+            poolListEl.innerHTML = POOL_SESSIONS.map(sess => {
+                const used = getUsedPoolQuota(sharedDate, sess.id);
+                const remaining = Math.max(0, MAX_POOL_QUOTA - used);
+                const pct = Math.min(100, Math.round((used / MAX_POOL_QUOTA) * 100));
+
+                return `
+                    <div class="p-3 rounded-xl bg-white border border-sky-200/80 space-y-1.5">
+                        <div class="flex items-center justify-between">
+                            <span class="font-extrabold text-slate-900">${sess.title}</span>
+                            <span class="font-bold text-sky-700">${used} / ${MAX_POOL_QUOTA} Org</span>
+                        </div>
+                        <p class="text-[11px] text-slate-500">${sess.time} • Sisa kuota: <strong>${remaining} orang</strong></p>
+                        <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                            <div class="h-full ${remaining === 0 ? 'bg-rose-500' : 'bg-sky-500'}" style="width: ${pct}%"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // =========================================================================
+        // SUBMIT RESERVASI BARU -> POST action: "create" KE GOOGLE SHEETS
+        // =========================================================================
+        async function submitReservation(e) {
+            e.preventDefault();
+
+            const name = document.getElementById('input-name').value.trim();
+            const whatsapp = document.getElementById('input-whatsapp').value.trim();
+            const addressInfo = document.getElementById('input-address').value.trim();
+            const paymentMethod = document.getElementById('input-payment').value;
+
+            if (!name || !whatsapp || !addressInfo) {
+                showToast('Harap lengkapi Nama, Nomor WhatsApp, dan Blok Rumah / Alamat.', 'error');
+                return;
+            }
+
+            const btnSubmit = document.getElementById('btn-confirm-booking');
+            const originalHtml = btnSubmit.innerHTML;
+            btnSubmit.disabled = true;
+            btnSubmit.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i><span>Menyimpan ke Google Sheets...</span>`;
+            lucide.createIcons();
+
+            try {
+
+                const random4 = Math.floor(1000 + Math.random() * 9000);
+                const bookingCode = `#CKS-2026-${random4}`;
+                const paymentStatus = paymentMethod.includes('Loket')
+                    ? 'Menunggu Verifikasi Loket'
+                    : 'Lunas / Terverifikasi';
+
+                let newTicket = null;
+
+                if (activeTab === 'tennis') {
+                    if (selectedTennisHours.length === 0) return;
+
+                    const occupied = getOccupiedTennisHours(selectedCourt, sharedDate);
+                    const conflict = selectedTennisHours.find(h => occupied.has(h));
+                    if (conflict) {
+                        showToast(`Slot jam ${conflict} baru saja terisi oleh pemesan lain. Silakan pilih slot jam lain.`, 'error');
+                        renderTennisSlots();
+                        updateReservationSummary();
+                        return;
+                    }
+
+                    const rate = RATES.tennis[visitorStatus];
+                    newTicket = {
+                        code: bookingCode,
+                        facilityType: 'tennis',
+                        facilityName: TENNIS_COURTS[selectedCourt].name,
+                        courtId: selectedCourt,
+                        sessionId: '',
+                        date: sharedDate,
+                        hours: [...selectedTennisHours],
+                        scheduleSummary: selectedTennisHours.map(h => getNextHourLabel(h)).join(', '),
+                        totalPeople: 0,
+                        visitorStatus,
+                        customerName: name,
+                        whatsapp,
+                        addressInfo,
+                        paymentMethod,
+                        paymentStatus,
+                        totalAmount: selectedTennisHours.length * rate,
+                        status: 'Aktif',
+                        createdAt: new Date().toISOString()
+                    };
+                } else {
+                    const remaining = getRemainingPoolQuota(sharedDate, selectedPoolSession);
+                    const totalPeople = poolAdult + poolChild + poolToddler;
+                    if (totalPeople === 0 || totalPeople > remaining) {
+                        showToast(`Sisa kuota sesi kolam renang hanya ${remaining} orang.`, 'error');
+                        renderPoolSessions();
+                        syncPoolCountersUI();
+                        return;
+                    }
+
+                    const sessObj = POOL_SESSIONS.find(s => s.id === selectedPoolSession);
+                    const rate = RATES.pool[visitorStatus];
+                    const paidCount = poolAdult + poolChild;
+
+                    const breakdown = [];
+                    if (poolAdult > 0) breakdown.push(`${poolAdult} Dewasa`);
+                    if (poolChild > 0) breakdown.push(`${poolChild} Anak`);
+                    if (poolToddler > 0) breakdown.push(`${poolToddler} Balita (<3 thn Gratis)`);
+
+                    newTicket = {
+                        code: bookingCode,
+                        facilityType: 'pool',
+                        facilityName: 'Kolam Renang Taman Cikas (Dewasa & Anak)',
+                        courtId: '',
+                        sessionId: selectedPoolSession,
+                        date: sharedDate,
+                        hours: [],
+                        scheduleSummary: `${sessObj.title} (${sessObj.time}) • ${breakdown.join(', ')}`,
+                        totalPeople,
+                        visitorStatus,
+                        customerName: name,
+                        whatsapp,
+                        addressInfo,
+                        paymentMethod,
+                        paymentStatus,
+                        totalAmount: paidCount * rate,
+                        status: 'Aktif',
+                        createdAt: new Date().toISOString()
+                    };
+                }
+
+                // Kirim ke Google Apps Script (action: "create")
+                const gasRes = await postToGoogleSheets({
+                    action: 'create',
+                    booking: newTicket
+                });
+
+                if (gasRes && gasRes.status === 'conflict') {
+                    showToast(gasRes.message || 'Jadwal/kuota baru saja penuh di server. Silakan pilih jadwal lain.', 'error');
+                    await syncFromGoogleSheets(false);
+                    return;
+                }
+
+                if (!gasRes || gasRes.status !== 'success') {
+                    throw new Error((gasRes && gasRes.message) || 'Gagal menyimpan reservasi ke Google Sheets');
+                }
+
+                // Simpan kode tiket milik perangkat ini & update cache
+                addMySavedCode(bookingCode);
+                const all = getAllTickets();
+                all.unshift(newTicket);
+                saveAllTickets(all);
+
+                // Reset pilihan slot/pengunjung
+                if (activeTab === 'tennis') {
+                    selectedTennisHours = [];
+                    renderTennisSlots();
+                } else {
+                    poolAdult = 1;
+                    poolChild = 0;
+                    poolToddler = 0;
+                    renderPoolSessions();
+                    syncPoolCountersUI();
+                }
+
+                renderLiveAvailabilityBoard();
+                updateReservationSummary();
+
+                showToast(`Reservasi berhasil tersimpan di Google Sheets! Kode E-Tiket: ${bookingCode}`, 'success');
+                openPrintTicketModal(bookingCode);
+
+                // Sinkronisasi ulang latar belakang
+                syncFromGoogleSheets(false);
+            } catch (err) {
+                console.error('Submit reservation error:', err);
+                const detail = err && err.message ? ` (${err.message})` : '';
+                showToast(`Gagal menyimpan booking ke Google Sheets${detail}.`, 'error');
+            } finally {
+                btnSubmit.innerHTML = originalHtml;
+                lucide.createIcons();
+                updateReservationSummary();
+            }
+        }
+
+        // =========================================================================
+        // MANAJEMEN E-TIKET (LIHAT, CARI, CETAK PDF, BATALKAN)
+        // =========================================================================
+        function openMyTicketsModal() {
+            document.getElementById('my-tickets-modal').classList.remove('hidden');
+            renderMyTicketsList();
+            lucide.createIcons();
+        }
+
+        function closeMyTicketsModal() {
+            document.getElementById('my-tickets-modal').classList.add('hidden');
+        }
+
+        function renderMyTicketsList() {
+            const listEl = document.getElementById('my-tickets-list');
+            const query = (document.getElementById('ticket-search-input').value || '').trim().toLowerCase();
+            const all = getAllTickets();
+            const myCodes = getMySavedCodes();
+
+            let filtered = [];
+            if (query) {
+                // Jika user mengetik pencarian, cari di seluruh database Google Sheets (kode booking / nama / WA)
+                filtered = all.filter(t =>
+                    t.code.toLowerCase().includes(query) ||
+                    t.whatsapp.toLowerCase().includes(query) ||
+                    t.customerName.toLowerCase().includes(query)
+                );
+            } else {
+                // Default tampilkan tiket yang dibuat dari perangkat ini
+                filtered = all.filter(t => myCodes.includes(t.code));
+            }
+
+            if (filtered.length === 0) {
+                listEl.innerHTML = `
+                    <div class="p-8 rounded-2xl bg-slate-50 border border-slate-200 text-center space-y-2">
+                        <i data-lucide="ticket" class="w-8 h-8 text-slate-400 mx-auto"></i>
+                        <p class="text-sm font-bold text-slate-700">
+                            ${query ? 'Tiket tidak ditemukan' : 'Belum ada E-Tiket tersimpan di perangkat ini'}
+                        </p>
+                        <p class="text-xs text-slate-500">
+                            ${query ? 'Pastikan kode booking (#CKS-2026-XXXX) atau nomor WhatsApp sudah benar.' : 'Lakukan reservasi fasilitas atau ketik Kode Booking / No. WhatsApp Anda pada kolom pencarian di atas.'}
+                        </p>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            listEl.innerHTML = filtered.map(t => {
+                const isCancelled = t.status === 'Dibatalkan';
+                return `
+                    <div class="p-4 rounded-2xl border ${isCancelled ? 'border-slate-200 bg-slate-50 opacity-75' : 'border-slate-200 bg-white shadow-xs'} space-y-3">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <div class="flex items-center gap-2">
+                                <span class="font-mono font-extrabold text-sm text-teal-700">${t.code}</span>
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
+                                    isCancelled
+                                        ? 'bg-rose-100 text-rose-700'
+                                        : 'bg-emerald-100 text-emerald-700'
+                                }">
+                                    ${t.status}
+                                </span>
+                            </div>
+                            <span class="text-xs font-extrabold text-slate-900">${formatRupiah(t.totalAmount)}</span>
+                        </div>
+
+                        <div class="text-xs space-y-1">
+                            <p class="font-extrabold text-slate-900">${t.facilityName}</p>
+                            <p class="text-slate-600"><strong>Tanggal:</strong> ${formatIndoDate(t.date)}</p>
+                            <p class="text-slate-600"><strong>Jadwal:</strong> ${t.scheduleSummary}</p>
+                            <p class="text-slate-500"><strong>Pemesan:</strong> ${t.customerName} (${t.addressInfo})</p>
+                        </div>
+
+                        <div class="flex flex-wrap items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                            <button type="button" onclick="openPrintTicketModal('${t.code}')"
+                                class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold flex items-center gap-1.5">
+                                <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+                                <span>Detail &amp; Cetak PDF</span>
+                            </button>
+                            ${!isCancelled ? `
+                                <button type="button" onclick="promptCancelTicket('${t.code}')"
+                                    class="px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold flex items-center gap-1.5">
+                                    <i data-lucide="x-circle" class="w-3.5 h-3.5"></i>
+                                    <span>Batalkan Jadwal</span>
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            lucide.createIcons();
+        }
+
+        function openPrintTicketModal(code) {
+            const ticket = getAllTickets().find(t => t.code === code);
+            if (!ticket) {
+                showToast('Data e-tiket tidak ditemukan.', 'error');
+                return;
+            }
+
+            document.getElementById('pt-code').textContent = ticket.code;
+            const isCancelled = ticket.status === 'Dibatalkan';
+
+            document.getElementById('print-ticket-body').innerHTML = `
+                <div class="flex items-center justify-between pb-3 border-b border-dashed border-slate-300">
+                    <span class="text-slate-500">Status Reservasi</span>
+                    <span class="px-2.5 py-1 rounded-full font-extrabold ${
+                        isCancelled ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'
+                    }">${ticket.status.toUpperCase()}</span>
+                </div>
+
+                <div class="space-y-2.5">
+                    <div class="flex justify-between gap-4">
+                        <span class="text-slate-500">Fasilitas</span>
+                        <span class="font-extrabold text-slate-900 text-right">${ticket.facilityName}</span>
+                    </div>
+                    <div class="flex justify-between gap-4">
+                        <span class="text-slate-500">Tanggal</span>
+                        <span class="font-bold text-slate-900 text-right">${formatIndoDate(ticket.date)}</span>
+                    </div>
+                    <div class="flex justify-between gap-4">
+                        <span class="text-slate-500">Jadwal / Sesi</span>
+                        <span class="font-bold text-teal-700 text-right">${ticket.scheduleSummary}</span>
+                    </div>
+                    <div class="flex justify-between gap-4">
+                        <span class="text-slate-500">Nama Pemesan</span>
+                        <span class="font-bold text-slate-900 text-right">${ticket.customerName}</span>
+                    </div>
+                    <div class="flex justify-between gap-4">
+                        <span class="text-slate-500">Kategori &amp; Alamat</span>
+                        <span class="font-semibold text-slate-800 text-right">${ticket.visitorStatus === 'warga' ? 'Warga RW 025' : 'Tamu Umum'} • ${ticket.addressInfo}</span>
+                    </div>
+                    <div class="flex justify-between gap-4">
+                        <span class="text-slate-500">No. WhatsApp</span>
+                        <span class="font-semibold text-slate-800 text-right">${ticket.whatsapp}</span>
+                    </div>
+                    <div class="flex justify-between gap-4">
+                        <span class="text-slate-500">Pembayaran</span>
+                        <span class="font-semibold text-slate-800 text-right">${ticket.paymentMethod}</span>
+                    </div>
+                </div>
+
+                <div class="pt-3 border-t border-dashed border-slate-300 flex items-center justify-between">
+                    <span class="font-bold text-slate-700">Total Biaya</span>
+                    <span class="text-lg font-extrabold text-slate-900">${formatRupiah(ticket.totalAmount)}</span>
+                </div>
+
+                <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200 text-[11px] text-slate-600 text-center">
+                    Tunjukkan E-Tiket ini kepada petugas lapangan / kolam renang Taman Cikas RW 025 saat kedatangan.
+                </div>
+            `;
+
+            document.getElementById('print-ticket-modal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closePrintTicketModal() {
+            document.getElementById('print-ticket-modal').classList.add('hidden');
+        }
+
+        // Pembatalan Jadwal -> POST action: "cancel" ke Google Sheets
+        function promptCancelTicket(code) {
+            ticketToCancel = code;
+            document.getElementById('cancel-ticket-code').textContent = code;
+            document.getElementById('cancel-modal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeCancelModal() {
+            ticketToCancel = null;
+            document.getElementById('cancel-modal').classList.add('hidden');
+        }
+
+        document.getElementById('confirm-cancel-action').addEventListener('click', async function () {
+            if (!ticketToCancel) return;
+
+            const btn = this;
+            const origText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'Membatalkan di Google Sheets...';
+
+            try {
+                const gasRes = await postToGoogleSheets({
+                    action: 'cancel',
+                    code: ticketToCancel
+                });
+
+                if (!gasRes || gasRes.status !== 'success') {
+                    throw new Error((gasRes && gasRes.message) || 'Gagal membatalkan jadwal di Google Sheets');
+                }
+
+                const all = getAllTickets();
+                const target = all.find(t => t.code === ticketToCancel);
+                if (target) {
+                    target.status = 'Dibatalkan';
+                    saveAllTickets(all);
+                }
+
+                renderTennisSlots();
+                renderPoolSessions();
+                syncPoolCountersUI();
+                renderLiveAvailabilityBoard();
+                renderMyTicketsList();
+                updateReservationSummary();
+
+                showToast(`Reservasi ${ticketToCancel} telah dibatalkan di Google Sheets. Slot/kuota dikembalikan.`, 'success');
+                closeCancelModal();
+                syncFromGoogleSheets(false);
+            } catch (err) {
+                console.error('Cancel error:', err);
+                showToast('Gagal membatalkan jadwal di Google Sheets. Periksa koneksi internet Anda.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = origText;
+            }
+        });
+
+        // =========================================================================
+        // PENGATURAN URL GOOGLE APPS SCRIPT
+        // =========================================================================
+        function openSheetSettingsModal() {
+            document.getElementById('input-gas-url').value = getActiveGasUrl();
+            document.getElementById('sheet-settings-modal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeSheetSettingsModal() {
+            document.getElementById('sheet-settings-modal').classList.add('hidden');
+        }
+
+        async function saveAndTestGoogleSheetUrl() {
+            const val = document.getElementById('input-gas-url').value.trim();
+            if (!val || !val.startsWith('https://script.google.com/')) {
+                showToast('URL Web App harus diawali dengan https://script.google.com/...', 'error');
+                return;
+            }
+            try {
+                localStorage.setItem(GAS_URL_OVERRIDE_KEY, val);
+            } catch (e) {}
+            closeSheetSettingsModal();
+            await syncFromGoogleSheets(true);
+        }
+
+        async function resetGoogleSheetUrl() {
+            try {
+                localStorage.removeItem(GAS_URL_OVERRIDE_KEY);
+            } catch (e) {}
+            document.getElementById('input-gas-url').value = DEFAULT_GOOGLE_SCRIPT_URL;
+            closeSheetSettingsModal();
+            await syncFromGoogleSheets(true);
+        }
+
+
+        // =========================================================================
+        // FITUR ADMIN: LOGIN VIA GOOGLE SHEET (Admin_Cikas), EDIT, HAPUS & EXPORT
+        // =========================================================================
+        const ADMIN_SESSION_KEY = 'cikas_sport_center_admin_session_v1';
+        let adminSession = null;
+
+        function loadAdminSession() {
+            try {
+                const raw = sessionStorage.getItem(ADMIN_SESSION_KEY);
+                adminSession = raw ? JSON.parse(raw) : null;
+            } catch (e) {
+                adminSession = null;
+            }
+            updateAdminHeaderBadge();
+        }
+
+        function saveAdminSession(sessionObj) {
+            adminSession = sessionObj;
+            try {
+                if (sessionObj) {
+                    sessionStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify(sessionObj));
+                } else {
+                    sessionStorage.removeItem(ADMIN_SESSION_KEY);
+                }
+            } catch (e) {}
+            updateAdminHeaderBadge();
+        }
+
+        function updateAdminHeaderBadge() {
+            const label = document.getElementById('header-admin-label');
+            if (!label) return;
+            if (adminSession && adminSession.username) {
+                label.textContent = `Admin (${adminSession.username})`;
+            } else {
+                label.textContent = 'Admin';
+            }
+        }
+
+        function openAdminModal() {
+            document.getElementById('admin-modal').classList.remove('hidden');
+            syncAdminModalView();
+            lucide.createIcons();
+        }
+
+        function closeAdminModal() {
+            document.getElementById('admin-modal').classList.add('hidden');
+        }
+
+        function syncAdminModalView() {
+            const loginForm = document.getElementById('admin-login-form');
+            const dashView = document.getElementById('admin-dashboard-view');
+            const logoutBtn = document.getElementById('btn-admin-logout');
+            const badge = document.getElementById('admin-active-user-badge');
+
+            if (adminSession && adminSession.username) {
+                loginForm.classList.add('hidden');
+                dashView.classList.remove('hidden');
+                logoutBtn.classList.remove('hidden');
+                badge.textContent = `Admin: ${adminSession.username}`;
+                renderAdminBookingTable();
+            } else {
+                loginForm.classList.remove('hidden');
+                dashView.classList.add('hidden');
+                logoutBtn.classList.add('hidden');
+            }
+        }
+
+        async function handleAdminLogin(e) {
+            e.preventDefault();
+            const username = document.getElementById('admin-username').value.trim();
+            const password = document.getElementById('admin-password').value;
+
+            if (!username || !password) {
+                showToast('Masukkan username dan password admin.', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('btn-admin-login-submit');
+            const origHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i><span>Memverifikasi ke Google Sheet...</span>`;
+            lucide.createIcons();
+
+            try {
+                const res = await postToGoogleSheets({
+                    action: 'adminLogin',
+                    username,
+                    password
+                });
+
+                if (res && res.status === 'success') {
+                    saveAdminSession({
+                        username: res.username || username,
+                        loginAt: new Date().toISOString()
+                    });
+                    document.getElementById('admin-password').value = '';
+                    showToast(`Login berhasil. Selamat datang, ${res.username || username}!`, 'success');
+                    syncAdminModalView();
+                    await syncFromGoogleSheets(false);
+                } else {
+                    throw new Error((res && res.message) || 'Username atau password admin salah');
+                }
+            } catch (err) {
+                console.error('Admin login error:', err);
+                showToast(`Gagal login admin: ${err.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = origHtml;
+                lucide.createIcons();
+            }
+        }
+
+        function logoutAdmin() {
+            saveAdminSession(null);
+            syncAdminModalView();
+            showToast('Anda telah keluar dari sesi Admin.', 'success');
+        }
+
+        function getFilteredAdminBookings() {
+            const q = (document.getElementById('admin-filter-search')?.value || '').trim().toLowerCase();
+            const fac = document.getElementById('admin-filter-facility')?.value || 'all';
+            const st = document.getElementById('admin-filter-status')?.value || 'all';
+
+            return getAllTickets().filter(t => {
+                if (fac !== 'all' && t.facilityType !== fac) return false;
+                if (st !== 'all' && t.status !== st) return false;
+                if (q) {
+                    const hay = `${t.code} ${t.customerName} ${t.whatsapp} ${t.addressInfo} ${t.facilityName} ${t.scheduleSummary} ${t.date}`.toLowerCase();
+                    if (!hay.includes(q)) return false;
+                }
+                return true;
+            });
+        }
+
+        function renderAdminBookingTable() {
+            if (!adminSession) return;
+            const tbody = document.getElementById('admin-booking-tbody');
+            const statTotal = document.getElementById('admin-stat-total');
+            const statRevenue = document.getElementById('admin-stat-revenue');
+            if (!tbody) return;
+
+            const rows = getFilteredAdminBookings();
+            const activeRevenue = rows
+                .filter(r => r.status !== 'Dibatalkan')
+                .reduce((acc, r) => acc + (Number(r.totalAmount) || 0), 0);
+
+            statTotal.textContent = `Total Data: ${rows.length}`;
+            statRevenue.textContent = `Omzet Aktif: ${formatRupiah(activeRevenue)}`;
+
+            if (rows.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="py-8 px-4 text-center text-slate-500 font-medium">
+                            Tidak ada data reservasi yang cocok dengan filter saat ini.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = rows.map(t => {
+                const isCancelled = t.status === 'Dibatalkan';
+                const encodedCode = encodeURIComponent(t.code);
+                return `
+                    <tr class="${isCancelled ? 'bg-slate-50/80 text-slate-400' : 'hover:bg-slate-50/70 text-slate-800'}">
+                        <td class="py-3 px-3.5 font-mono font-extrabold text-teal-700 whitespace-nowrap">${t.code}</td>
+                        <td class="py-3 px-3.5">
+                            <div class="font-bold">${t.date}</div>
+                            <div class="text-[11px] text-slate-500 max-w-[210px]">${t.scheduleSummary}</div>
+                        </td>
+                        <td class="py-3 px-3.5 font-semibold whitespace-nowrap">${t.facilityName}</td>
+                        <td class="py-3 px-3.5">
+                            <div class="font-bold">${t.customerName}</div>
+                            <div class="text-[11px] text-slate-500">${t.visitorStatus === 'warga' ? 'Warga RW 025' : 'Tamu'} • ${t.addressInfo}</div>
+                            <div class="text-[11px] text-slate-400">${t.whatsapp}</div>
+                        </td>
+                        <td class="py-3 px-3.5">
+                            <div class="font-semibold">${t.paymentMethod}</div>
+                            <div class="text-[11px] text-slate-500">${t.paymentStatus}</div>
+                        </td>
+                        <td class="py-3 px-3.5 text-right font-extrabold whitespace-nowrap">${formatRupiah(t.totalAmount)}</td>
+                        <td class="py-3 px-3.5 text-center whitespace-nowrap">
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
+                                isCancelled ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'
+                            }">${t.status}</span>
+                        </td>
+                        <td class="py-3 px-3.5 text-center whitespace-nowrap">
+                            <div class="inline-flex items-center gap-1.5">
+                                <button type="button" onclick="openAdminEditModal(decodeURIComponent('${encodedCode}'))" title="Edit Booking"
+                                    class="p-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200">
+                                    <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+                                </button>
+                                <button type="button" onclick="deleteAdminBooking(decodeURIComponent('${encodedCode}'))" title="Hapus Permanen dari Google Sheet"
+                                    class="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200">
+                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            lucide.createIcons();
+        }
+
+        function openAdminEditModal(code) {
+            const target = getAllTickets().find(t => t.code === code);
+            if (!target) {
+                showToast('Data booking tidak ditemukan.', 'error');
+                return;
+            }
+
+            document.getElementById('edit-original-code').value = target.code;
+            document.getElementById('edit-code-display').textContent = target.code;
+            document.getElementById('edit-date').value = target.date || '';
+            document.getElementById('edit-status').value = target.status || 'Aktif';
+            document.getElementById('edit-schedule-summary').value = target.scheduleSummary || '';
+            document.getElementById('edit-hours').value = Array.isArray(target.hours) ? target.hours.join(', ') : (target.hours || '');
+            document.getElementById('edit-total-people').value = Number(target.totalPeople || 0);
+            document.getElementById('edit-customer-name').value = target.customerName || '';
+            document.getElementById('edit-whatsapp').value = target.whatsapp || '';
+            document.getElementById('edit-visitor-status').value = target.visitorStatus === 'tamu' ? 'tamu' : 'warga';
+            document.getElementById('edit-address-info').value = target.addressInfo || '';
+            document.getElementById('edit-payment-method').value = target.paymentMethod || '';
+            document.getElementById('edit-payment-status').value = target.paymentStatus || '';
+            document.getElementById('edit-total-amount').value = Number(target.totalAmount || 0);
+
+            document.getElementById('admin-edit-modal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeAdminEditModal() {
+            document.getElementById('admin-edit-modal').classList.add('hidden');
+        }
+
+        async function submitAdminEditBooking(e) {
+            e.preventDefault();
+            if (!adminSession) return;
+
+            const code = document.getElementById('edit-original-code').value.trim();
+            const existing = getAllTickets().find(t => t.code === code);
+            if (!existing) return;
+
+            const rawHours = document.getElementById('edit-hours').value
+                .split(',')
+                .map(h => h.trim())
+                .filter(Boolean);
+
+            const updatedBooking = {
+                ...existing,
+                date: document.getElementById('edit-date').value.trim(),
+                status: document.getElementById('edit-status').value,
+                scheduleSummary: document.getElementById('edit-schedule-summary').value.trim(),
+                hours: rawHours,
+                totalPeople: Number(document.getElementById('edit-total-people').value || 0),
+                customerName: document.getElementById('edit-customer-name').value.trim(),
+                whatsapp: document.getElementById('edit-whatsapp').value.trim(),
+                visitorStatus: document.getElementById('edit-visitor-status').value,
+                addressInfo: document.getElementById('edit-address-info').value.trim(),
+                paymentMethod: document.getElementById('edit-payment-method').value.trim(),
+                paymentStatus: document.getElementById('edit-payment-status').value.trim(),
+                totalAmount: Number(document.getElementById('edit-total-amount').value || 0)
+            };
+
+            const btn = document.getElementById('btn-save-admin-edit');
+            const origHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i><span>Menyimpan...</span>`;
+            lucide.createIcons();
+
+            try {
+                const res = await postToGoogleSheets({
+                    action: 'updateBooking',
+                    username: adminSession.username,
+                    booking: updatedBooking
+                });
+
+                if (!res || res.status !== 'success') {
+                    throw new Error((res && res.message) || 'Gagal memperbarui data booking');
+                }
+
+                closeAdminEditModal();
+                showToast(`Reservasi ${code} berhasil diperbarui di Google Sheets!`, 'success');
+                await syncFromGoogleSheets(false);
+            } catch (err) {
+                console.error('Update booking error:', err);
+                showToast(`Gagal mengedit booking: ${err.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = origHtml;
+                lucide.createIcons();
+            }
+        }
+
+        async function deleteAdminBooking(code) {
+            if (!adminSession) return;
+            const ok = window.confirm(`Hapus permanen booking ${code} dari Google Sheets? Tindakan ini tidak dapat dibatalkan.`);
+            if (!ok) return;
+
+            try {
+                const res = await postToGoogleSheets({
+                    action: 'deleteBooking',
+                    username: adminSession.username,
+                    code
+                });
+
+                if (!res || res.status !== 'success') {
+                    throw new Error((res && res.message) || 'Gagal menghapus data booking');
+                }
+
+                showToast(`Booking ${code} berhasil dihapus dari Google Sheets.`, 'success');
+                await syncFromGoogleSheets(false);
+            } catch (err) {
+                console.error('Delete booking error:', err);
+                showToast(`Gagal menghapus booking: ${err.message}`, 'error');
+            }
+        }
+
+        function exportAdminBookingsExcel() {
+            if (!adminSession) return;
+            if (typeof XLSX === 'undefined') {
+                showToast('Pustaka Excel (SheetJS) belum termuat.', 'error');
+                return;
+            }
+
+            const rows = getFilteredAdminBookings().map(t => ({
+                'Kode Booking': t.code,
+                'Tanggal': t.date,
+                'Fasilitas': t.facilityName,
+                'Jadwal / Sesi': t.scheduleSummary,
+                'Jumlah Orang': Number(t.totalPeople || 0),
+                'Status Pengunjung': t.visitorStatus === 'warga' ? 'Warga RW 025' : 'Tamu Umum',
+                'Nama Pemesan': t.customerName,
+                'No. WhatsApp': t.whatsapp,
+                'Blok / Alamat': t.addressInfo,
+                'Metode Pembayaran': t.paymentMethod,
+                'Status Pembayaran': t.paymentStatus,
+                'Total Biaya (Rp)': Number(t.totalAmount || 0),
+                'Status Reservasi': t.status
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(rows);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Booking_Cikas');
+            XLSX.writeFile(wb, `Booking_Cikas_Sport_Center_${getTodayDateStr()}.xlsx`);
+            showToast('File Excel (.xlsx) berhasil diunduh!', 'success');
+        }
+
+        function exportAdminBookingsPDF() {
+            if (!adminSession) return;
+            if (!window.jspdf || !window.jspdf.jsPDF) {
+                showToast('Pustaka PDF (jsPDF) belum termuat.', 'error');
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+            doc.setFontSize(14);
+            doc.text('Laporan Booking List — Cikas Sport Center (RW 025 Taman Cikas)', 14, 15);
+            doc.setFontSize(9);
+            doc.text(`Dicetak oleh: ${adminSession.username} | Tanggal: ${getTodayDateStr()}`, 14, 21);
+
+            const rows = getFilteredAdminBookings();
+            const tableBody = rows.map(t => [
+                t.code,
+                t.date,
+                t.facilityName,
+                t.scheduleSummary,
+                `${t.customerName} (${t.addressInfo})`,
+                t.whatsapp,
+                formatRupiah(t.totalAmount),
+                t.status
+            ]);
+
+            if (typeof doc.autoTable === 'function') {
+                doc.autoTable({
+                    startY: 26,
+                    head: [['Kode', 'Tanggal', 'Fasilitas', 'Jadwal / Sesi', 'Pemesan', 'No. WA', 'Total', 'Status']],
+                    body: tableBody,
+                    styles: { fontSize: 8, cellPadding: 2.5 },
+                    headStyles: { fillColor: [15, 23, 42] }
+                });
+            }
+
+            doc.save(`Booking_Cikas_Sport_Center_${getTodayDateStr()}.pdf`);
+            showToast('File PDF (.pdf) berhasil diunduh!', 'success');
+        }
+
+        // =========================================================================
+        // INISIALISASI SAAT HALAMAN DIMUAT
+        // =========================================================================
+        window.addEventListener('DOMContentLoaded', async () => {
+            const today = getTodayDateStr();
+            sharedDate = today;
+
+            ['tennis-date-input', 'pool-date-input', 'board-date-input'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.min = today;
+                    el.value = today;
+                }
+            });
+
+            loadAdminSession();
+            updateTicketBadge();
+            setVisitorStatus('warga');
+            switchMainTab('tennis', false);
+            renderLiveAvailabilityBoard();
+            lucide.createIcons();
+
+            // Langsung sinkronisasi dengan Google Sheets saat halaman dibuka
+            await syncFromGoogleSheets(false);
+        });
+    </script>
+</body>
+</html>
