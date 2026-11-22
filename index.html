@@ -33,7 +33,6 @@
             background-color: #f8fafc;
             color: #0f172a;
         }
-        /* Custom scrollbar */
         ::-webkit-scrollbar {
             width: 8px;
             height: 8px;
@@ -48,7 +47,6 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #94a3b8;
         }
-        /* Print Styles untuk E-Tiket */
         @media print {
             body * {
                 visibility: hidden !important;
@@ -105,13 +103,12 @@
 
                 <!-- Action Buttons -->
                 <div class="flex items-center gap-2 shrink-0">
-                    <!-- Indikator Status Koneksi Google Sheets -->
-                    <button onclick="openSheetSettingsModal()" id="header-connection-btn" title="Status & Pengaturan Google Sheets"
-                        class="inline-flex items-center gap-2 bg-slate-800/90 hover:bg-slate-700 border border-slate-700 text-slate-200 px-3 py-2.5 rounded-xl text-xs font-bold transition-all active:scale-95">
+                    <!-- Indikator Status Koneksi (Hanya Informasi, Pengaturan API Khusus Admin) -->
+                    <div id="header-connection-status" title="Status Sinkronisasi Database"
+                        class="inline-flex items-center gap-2 bg-slate-800/90 border border-slate-700 text-slate-200 px-3 py-2.5 rounded-xl text-xs font-bold">
                         <span id="connection-dot" class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
                         <span id="connection-label" class="hidden sm:inline">Menghubungkan...</span>
-                        <i data-lucide="settings" class="w-3.5 h-3.5 text-slate-400"></i>
-                    </button>
+                    </div>
 
                     <!-- Tombol Refresh Jadwal -->
                     <button onclick="syncFromGoogleSheets(true)" id="btn-sync-now" title="Refresh Jadwal Real-Time"
@@ -146,7 +143,7 @@
         <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
             <div class="flex items-center gap-2">
                 <i data-lucide="cloud" id="banner-icon" class="w-4 h-4 text-teal-600 shrink-0"></i>
-                <span id="banner-status-text">Menyinkronkan jadwal Lapangan Tenis &amp; Kolam Renang dengan Google Sheets...</span>
+                <span id="banner-status-text">Menyinkronkan jadwal Lapangan Tenis &amp; Kolam Renang dengan Database...</span>
             </div>
             <span id="last-sync-time" class="text-[11px] font-semibold text-slate-500"></span>
         </div>
@@ -221,7 +218,7 @@
                                 <span class="font-extrabold text-sm text-slate-900">Warga Taman Cikas</span>
                                 <span class="px-1.5 py-0.5 rounded-md bg-teal-600 text-white text-[10px] font-bold">RW 025</span>
                             </div>
-                            <p class="text-[11px] text-slate-600 mt-0.5">Tenis <strong>Rp 35.000</strong>/jam • Renang <strong>Rp 15.000</strong>/org</p>
+                            <p id="card-rate-warga-desc" class="text-[11px] text-slate-600 mt-0.5">Tenis <strong>Rp 35.000</strong>/jam • Renang <strong>Rp 15.000</strong>/org</p>
                         </div>
                     </button>
 
@@ -235,7 +232,7 @@
                                 <span class="font-extrabold text-sm text-slate-900">Tamu / Umum</span>
                                 <span class="px-1.5 py-0.5 rounded-md bg-slate-200 text-slate-700 text-[10px] font-bold">Non-Warga</span>
                             </div>
-                            <p class="text-[11px] text-slate-600 mt-0.5">Tenis <strong>Rp 60.000</strong>/jam • Renang <strong>Rp 25.000</strong>/org</p>
+                            <p id="card-rate-tamu-desc" class="text-[11px] text-slate-600 mt-0.5">Tenis <strong>Rp 60.000</strong>/jam • Renang <strong>Rp 25.000</strong>/org</p>
                         </div>
                     </button>
                 </div>
@@ -271,11 +268,16 @@
                                 Reservasi Lapangan Tenis
                             </span>
                             <h3 class="text-lg sm:text-xl font-extrabold text-slate-900 mt-1">Lapangan Tenis Taman Cikas</h3>
-                            <p class="text-xs text-slate-500">Operasional 06:00 – 21:00 WIB • Durasi per slot 1 jam (bisa pilih lebih dari 1 jam).</p>
+                            <p class="text-xs text-slate-500">Operasional 06:00 – 21:00 WIB • 1x booking langsung mengunci slot jam (bisa pilih lebih dari 1 jam).</p>
                         </div>
-                        <span class="px-3 py-1 rounded-full bg-teal-50 text-teal-700 border border-teal-200 text-xs font-extrabold" id="tennis-rate-badge">
-                            Rp 35.000 / jam
-                        </span>
+                        <div class="flex flex-col items-end gap-1">
+                            <span class="px-3 py-1 rounded-full bg-teal-50 text-teal-700 border border-teal-200 text-xs font-extrabold" id="tennis-rate-badge">
+                                Reguler: Rp 35.000 / jam
+                            </span>
+                            <span class="px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-[11px] font-bold" id="tennis-premium-badge">
+                                Premium: Rp 50.000 / jam
+                            </span>
+                        </div>
                     </div>
 
                     <!-- Pilih Tanggal & Pilih Court -->
@@ -310,13 +312,16 @@
                         <span class="font-bold text-slate-700">Pilih Slot Jam (Multi-select):</span>
                         <div class="flex flex-wrap items-center gap-3">
                             <span class="inline-flex items-center gap-1.5 text-slate-600">
-                                <span class="w-3 h-3 rounded-sm bg-white border border-slate-300"></span> Tersedia
+                                <span class="w-3 h-3 rounded-sm bg-white border border-slate-300"></span> Reguler
+                            </span>
+                            <span class="inline-flex items-center gap-1.5 text-amber-800 font-semibold">
+                                <span class="w-3 h-3 rounded-sm bg-amber-50 border border-amber-300"></span> Premium
                             </span>
                             <span class="inline-flex items-center gap-1.5 text-teal-700 font-bold">
                                 <span class="w-3 h-3 rounded-sm bg-teal-600"></span> Dipilih
                             </span>
                             <span class="inline-flex items-center gap-1.5 text-rose-700 font-bold">
-                                <span class="w-3 h-3 rounded-sm bg-rose-100 border border-rose-300"></span> Terisi
+                                <span class="w-3 h-3 rounded-sm bg-rose-100 border border-rose-400"></span> Terisi (Terkunci)
                             </span>
                         </div>
                     </div>
@@ -441,9 +446,9 @@
                             <span class="text-slate-400 shrink-0">Jadwal / Sesi</span>
                             <span id="summary-schedule" class="font-bold text-amber-300 text-right">Belum ada jam dipilih</span>
                         </div>
-                        <div class="flex items-center justify-between">
-                            <span class="text-slate-400">Status &amp; Tarif</span>
-                            <span id="summary-rate-info" class="font-semibold text-slate-200">Warga RW 025 (Rp 35.000/jam)</span>
+                        <div class="flex items-start justify-between gap-3">
+                            <span class="text-slate-400 shrink-0">Status &amp; Tarif</span>
+                            <span id="summary-rate-info" class="font-semibold text-slate-200 text-right">Warga RW 025 (Reg Rp 35.000 | Prem Rp 50.000)</span>
                         </div>
                         <div class="pt-2.5 border-t border-slate-700/80 flex items-center justify-between">
                             <span class="text-sm font-bold text-slate-200">Total Pembayaran</span>
@@ -502,7 +507,7 @@
                         <span>Live Availability Board</span>
                     </div>
                     <h2 class="text-lg sm:text-xl font-extrabold text-slate-900 mt-1">Papan Jadwal &amp; Kuota Harian</h2>
-                    <p class="text-xs text-slate-500">Data langsung tersinkronisasi dengan database Google Sheets Cikas Sport Center.</p>
+                    <p class="text-xs text-slate-500">Data langsung tersinkronisasi dengan database Cikas Sport Center.</p>
                 </div>
 
                 <div class="flex items-center gap-2">
@@ -569,7 +574,6 @@
             <div class="flex items-center gap-4">
                 <button onclick="openMyTicketsModal()" class="text-teal-400 hover:underline font-bold">Cek E-Tiket Saya</button>
                 <button onclick="openAdminModal()" class="text-amber-400 hover:underline font-bold">Login Admin</button>
-                <button onclick="openSheetSettingsModal()" class="text-slate-400 hover:text-white">Pengaturan API</button>
             </div>
         </div>
     </footer>
@@ -588,7 +592,7 @@
                         </div>
                         <div>
                             <h3 class="text-lg sm:text-xl font-extrabold text-slate-900">Panel Admin — Cikas Sport Center</h3>
-                            <p class="text-xs text-slate-500">Autentikasi username &amp; password terhubung ke sheet <code class="font-mono bg-slate-100 px-1.5 py-0.5 rounded">Admin_Cikas</code> di Google Sheets</p>
+                            <p class="text-xs text-slate-500">Autentikasi username &amp; password terhubung ke <code class="font-mono bg-slate-100 px-1.5 py-0.5 rounded">Admin_Cikas</code> di Database</p>
                         </div>
                     </div>
                     <div class="flex items-center gap-2">
@@ -636,7 +640,7 @@
 
                 <!-- DASHBOARD ADMIN (SETELAH LOGIN) -->
                 <div id="admin-dashboard-view" class="hidden space-y-5">
-                    <!-- Top Summary & Export Toolbar -->
+                    <!-- Top Summary & Export + API Settings Toolbar -->
                     <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-200/80">
                         <div class="flex flex-wrap items-center gap-3 text-xs">
                             <span class="px-3 py-1.5 rounded-xl bg-slate-900 text-amber-300 font-extrabold" id="admin-active-user-badge">
@@ -651,6 +655,11 @@
                         </div>
 
                         <div class="flex flex-wrap items-center gap-2">
+                            <button type="button" onclick="openSheetSettingsModal()"
+                                class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-extrabold flex items-center gap-1.5">
+                                <i data-lucide="settings" class="w-3.5 h-3.5 text-amber-300"></i>
+                                <span>Pengaturan API</span>
+                            </button>
                             <button type="button" onclick="syncFromGoogleSheets(true)"
                                 class="px-3.5 py-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-300 text-slate-800 text-xs font-extrabold flex items-center gap-1.5">
                                 <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-teal-600"></i>
@@ -666,6 +675,69 @@
                                 <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
                                 <span>Download PDF (.pdf)</span>
                             </button>
+                        </div>
+                    </div>
+
+                    <!-- PENGATURAN HARGA REGULER & JAM PREMIUM (KHUSUS ADMIN) -->
+                    <div class="bg-amber-50/70 border border-amber-200/90 rounded-2xl p-4 sm:p-5 space-y-4">
+                        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-amber-200/70 pb-3">
+                            <div>
+                                <h4 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                                    <i data-lucide="badge-dollar-sign" class="w-4 h-4 text-amber-600"></i>
+                                    <span>Pengaturan Harga Reguler &amp; Jam Premium</span>
+                                </h4>
+                                <p class="text-[11px] text-slate-600">Atur tarif Warga RW 025, Non-Warga, serta slot jam khusus tarif premium lapangan tenis.</p>
+                            </div>
+                            <button type="button" onclick="saveAdminPricingSettings()"
+                                class="px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-extrabold flex items-center gap-1.5 shadow-xs">
+                                <i data-lucide="save" class="w-3.5 h-3.5"></i>
+                                <span>Simpan Pengaturan Harga</span>
+                            </button>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
+                            <div class="bg-white p-3.5 rounded-xl border border-slate-200 space-y-2">
+                                <p class="font-extrabold text-teal-700">Tenis — Tarif Reguler (/Jam)</p>
+                                <div>
+                                    <label for="cfg-tennis-warga" class="block text-[11px] font-bold text-slate-600 mb-0.5">Warga RW 025 (Rp)</label>
+                                    <input type="number" id="cfg-tennis-warga" min="0" step="1000" class="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg font-bold">
+                                </div>
+                                <div>
+                                    <label for="cfg-tennis-tamu" class="block text-[11px] font-bold text-slate-600 mb-0.5">Non-Warga / Tamu (Rp)</label>
+                                    <input type="number" id="cfg-tennis-tamu" min="0" step="1000" class="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg font-bold">
+                                </div>
+                            </div>
+
+                            <div class="bg-white p-3.5 rounded-xl border border-amber-300 space-y-2">
+                                <p class="font-extrabold text-amber-700">Tenis — Tarif Jam Premium (/Jam)</p>
+                                <div>
+                                    <label for="cfg-tennis-premium-warga" class="block text-[11px] font-bold text-slate-600 mb-0.5">Premium Warga RW 025 (Rp)</label>
+                                    <input type="number" id="cfg-tennis-premium-warga" min="0" step="1000" class="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg font-bold">
+                                </div>
+                                <div>
+                                    <label for="cfg-tennis-premium-tamu" class="block text-[11px] font-bold text-slate-600 mb-0.5">Premium Non-Warga / Tamu (Rp)</label>
+                                    <input type="number" id="cfg-tennis-premium-tamu" min="0" step="1000" class="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg font-bold">
+                                </div>
+                            </div>
+
+                            <div class="bg-white p-3.5 rounded-xl border border-sky-200 space-y-2">
+                                <p class="font-extrabold text-sky-700">Kolam Renang — Tarif (/Orang)</p>
+                                <div>
+                                    <label for="cfg-pool-warga" class="block text-[11px] font-bold text-slate-600 mb-0.5">Warga RW 025 (Rp)</label>
+                                    <input type="number" id="cfg-pool-warga" min="0" step="1000" class="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg font-bold">
+                                </div>
+                                <div>
+                                    <label for="cfg-pool-tamu" class="block text-[11px] font-bold text-slate-600 mb-0.5">Non-Warga / Tamu (Rp)</label>
+                                    <input type="number" id="cfg-pool-tamu" min="0" step="1000" class="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg font-bold">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-3.5 rounded-xl border border-slate-200 space-y-2">
+                            <p class="text-xs font-extrabold text-slate-800">Pilih Slot Jam Premium Lapangan Tenis (berlaku tarif premium):</p>
+                            <div id="cfg-premium-hours-grid" class="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-8 gap-2 text-xs">
+                                <!-- Diisi via JS -->
+                            </div>
                         </div>
                     </div>
 
@@ -845,7 +917,7 @@
                     </button>
                 </div>
 
-                <!-- Pencarian Tiket dari Database Google Sheets -->
+                <!-- Pencarian Tiket -->
                 <div class="flex flex-col sm:flex-row gap-2">
                     <div class="relative flex-1">
                         <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
@@ -860,7 +932,7 @@
                     </button>
                 </div>
 
-                <!-- Daftar Kartu E-Tiket -->
+                <!-- Daftar Kartu E-Tiket (Tanpa Tombol Batal untuk Publik) -->
                 <div id="my-tickets-list" class="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
                     <!-- Diisi via JavaScript -->
                 </div>
@@ -911,8 +983,8 @@
         </div>
     </div>
 
-    <!-- ================= MODAL KONFIRMASI PEMBATALAN ================= -->
-    <div id="cancel-modal" class="fixed inset-0 z-[70] hidden overflow-y-auto no-print" role="dialog" aria-modal="true">
+    <!-- ================= MODAL KONFIRMASI PEMBATALAN (KHUSUS ADMIN) ================= -->
+    <div id="cancel-modal" class="fixed inset-0 z-[75] hidden overflow-y-auto no-print" role="dialog" aria-modal="true">
         <div class="fixed inset-0 bg-slate-950/75 backdrop-blur-xs" onclick="closeCancelModal()"></div>
         <div class="flex min-h-full items-center justify-center p-4">
             <div class="relative w-full max-w-md bg-white rounded-3xl p-6 shadow-2xl border border-slate-200 text-center space-y-4">
@@ -920,7 +992,7 @@
                     <i data-lucide="alert-triangle" class="w-6 h-6"></i>
                 </div>
                 <div>
-                    <h3 class="text-lg font-extrabold text-slate-900">Batalkan Jadwal Reservasi?</h3>
+                    <h3 class="text-lg font-extrabold text-slate-900">Batalkan Jadwal Reservasi (Admin)?</h3>
                     <p class="text-xs text-slate-600 mt-1 leading-relaxed">
                         Anda akan membatalkan tiket <strong id="cancel-ticket-code" class="text-slate-900 font-mono">#CKS-2026-XXXX</strong>. Status di Google Sheets akan diperbarui menjadi <strong>Dibatalkan</strong> dan slot/kuota langsung dibuka kembali.
                     </p>
@@ -939,8 +1011,8 @@
         </div>
     </div>
 
-    <!-- ================= MODAL PENGATURAN KONEKSI GOOGLE SHEETS ================= -->
-    <div id="sheet-settings-modal" class="fixed inset-0 z-[75] hidden overflow-y-auto no-print" role="dialog" aria-modal="true">
+    <!-- ================= MODAL PENGATURAN KONEKSI GOOGLE SHEETS (KHUSUS ADMIN) ================= -->
+    <div id="sheet-settings-modal" class="fixed inset-0 z-[78] hidden overflow-y-auto no-print" role="dialog" aria-modal="true">
         <div class="fixed inset-0 bg-slate-950/75 backdrop-blur-xs" onclick="closeSheetSettingsModal()"></div>
         <div class="flex min-h-full items-center justify-center p-4">
             <div class="relative w-full max-w-lg bg-white rounded-3xl p-6 sm:p-7 shadow-2xl border border-slate-200">
@@ -950,8 +1022,8 @@
                             <i data-lucide="sheet" class="w-5 h-5"></i>
                         </div>
                         <div>
-                            <h3 class="text-base sm:text-lg font-extrabold text-slate-900">Koneksi Google Sheets Online</h3>
-                            <p class="text-xs text-slate-500">Endpoint Google Apps Script Web App aktif</p>
+                            <h3 class="text-base sm:text-lg font-extrabold text-slate-900">Pengaturan API Google Sheets</h3>
+                            <p class="text-xs text-slate-500">Akses khusus Admin RW 025</p>
                         </div>
                     </div>
                     <button onclick="closeSheetSettingsModal()" class="p-2 rounded-xl bg-slate-100 text-slate-500 hover:text-slate-800">
@@ -961,8 +1033,8 @@
 
                 <div class="space-y-4 text-xs">
                     <div class="p-3.5 rounded-2xl bg-emerald-50/70 border border-emerald-200 text-slate-700 leading-relaxed space-y-1">
-                        <p class="font-bold text-emerald-900">Status Endpoint Terpasang:</p>
-                        <p>Aplikasi sudah dikonfigurasi dengan URL Google Apps Script default milik Cikas Sport Center. Anda dapat menguji ulang koneksi atau mengganti URL jika melakukan deployment baru.</p>
+                        <p class="font-bold text-emerald-900">Endpoint Google Apps Script Web App:</p>
+                        <p>Ubah URL Web App di bawah ini jika Anda melakukan deployment baru pada Google Apps Script.</p>
                     </div>
 
                     <div>
@@ -990,27 +1062,32 @@
     <!-- ================= JAVASCRIPT APPLICATION LOGIC ================= -->
     <script>
         // =========================================================================
-        // KONFIGURASI URL GOOGLE APPS SCRIPT (TERTANAM DEFAULT)
+        // KONFIGURASI URL GOOGLE APPS SCRIPT & STORAGE KEYS
         // =========================================================================
         const DEFAULT_GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby7TxalCPykQWlKNMItn7RVtLrf2cTfmWuzRvsbZkgTTlHdSbBfVw8cEdAdIHrMyCrDag/exec";
 
         const STORAGE_KEY = 'cikas_sport_center_tickets_v2';
         const MY_CODES_KEY = 'cikas_sport_center_my_codes_v2';
         const GAS_URL_OVERRIDE_KEY = 'cikas_sport_center_gas_override';
+        const PRICING_CONFIG_KEY = 'cikas_sport_center_pricing_v1';
+        const ADMIN_SESSION_KEY = 'cikas_sport_center_admin_session_v1';
 
-        // Tarif Resmi RW 025 Taman Cikas
-        const RATES = {
+        let PRICING_CONFIG = {
             tennis: {
                 warga: 35000,
                 tamu: 60000
             },
+            tennisPremium: {
+                warga: 50000,
+                tamu: 80000
+            },
+            premiumHours: ['18:00', '19:00', '20:00'],
             pool: {
                 warga: 15000,
                 tamu: 25000
             }
         };
 
-        // Data Lapangan Tenis Taman Cikas
         const TENNIS_COURTS = {
             'court-1': {
                 id: 'court-1',
@@ -1026,14 +1103,12 @@
             }
         };
 
-        // Slot Jam Operasional Tenis (06:00 - 21:00 -> 15 slot per 1 jam)
         const TENNIS_HOURS = [
             '06:00', '07:00', '08:00', '09:00', '10:00',
             '11:00', '12:00', '13:00', '14:00', '15:00',
             '16:00', '17:00', '18:00', '19:00', '20:00'
         ];
 
-        // Sesi Kolam Renang Taman Cikas (Maksimal 40 orang per sesi)
         const MAX_POOL_QUOTA = 40;
         const POOL_SESSIONS = [
             {
@@ -1051,8 +1126,8 @@
         ];
 
         // State Aplikasi
-        let activeTab = 'tennis'; // 'tennis' | 'pool'
-        let visitorStatus = 'warga'; // 'warga' | 'tamu'
+        let activeTab = 'tennis';
+        let visitorStatus = 'warga';
         let sharedDate = '';
         let selectedCourt = 'court-1';
         let selectedTennisHours = [];
@@ -1063,6 +1138,155 @@
 
         let ticketToCancel = null;
         let isSyncing = false;
+        let adminSession = null;
+
+        // =========================================================================
+        // HELPER NORMALISASI TANGGAL, COURT & SLOT JAM TENIS
+        // =========================================================================
+        function normalizeDateValue(rawDate) {
+            if (!rawDate) return '';
+            if (rawDate instanceof Date && !isNaN(rawDate.getTime())) {
+                const y = rawDate.getFullYear();
+                const m = String(rawDate.getMonth() + 1).padStart(2, '0');
+                const d = String(rawDate.getDate()).padStart(2, '0');
+                return `${y}-${m}-${d}`;
+            }
+            let str = String(rawDate).trim().replace(/^'/, '');
+            if (str.includes('T')) {
+                const parsed = new Date(str);
+                if (!isNaN(parsed.getTime())) {
+                    // Sesuaikan zona waktu lokal WIB agar tanggal tidak bergeser mundur 1 hari
+                    const y = parsed.getFullYear();
+                    const m = String(parsed.getMonth() + 1).padStart(2, '0');
+                    const d = String(parsed.getDate()).padStart(2, '0');
+                    return `${y}-${m}-${d}`;
+                }
+                str = str.split('T')[0];
+            }
+            const slashMatch = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+            if (slashMatch) {
+                return `${slashMatch[3]}-${slashMatch[2].padStart(2, '0')}-${slashMatch[1].padStart(2, '0')}`;
+            }
+            return str;
+        }
+
+        function normalizeHourSlot(rawHour) {
+            const str = String(rawHour || '').trim();
+            const match = str.match(/^(\d{1,2})[:.](\d{2})/);
+            if (!match) return str;
+            return `${String(parseInt(match[1], 10)).padStart(2, '0')}:${match[2]}`;
+        }
+
+        function extractHoursFromRow(row) {
+            const collected = new Set();
+
+            const pushFromValue = (val) => {
+                if (!val) return;
+                if (Array.isArray(val)) {
+                    val.forEach(pushFromValue);
+                    return;
+                }
+                const str = String(val).trim();
+                if (!str) return;
+                if (str.startsWith('[')) {
+                    try {
+                        const arr = JSON.parse(str);
+                        if (Array.isArray(arr)) {
+                            arr.forEach(pushFromValue);
+                            return;
+                        }
+                    } catch (e) {}
+                }
+                str.split(',').forEach(part => {
+                    const norm = normalizeHourSlot(part);
+                    if (/^\d{2}:\d{2}$/.test(norm)) {
+                        collected.add(norm);
+                    }
+                });
+            };
+
+            pushFromValue(row.hours);
+
+            // Cadangan jika kolom hours kosong namun scheduleSummary memuat rentang jam seperti "07:00 - 08:00"
+            if (collected.size === 0 && row.scheduleSummary) {
+                const rangeMatches = String(row.scheduleSummary).match(/\b\d{1,2}[:.]\d{2}(?:\s*-\s*\d{1,2}[:.]\d{2})?/g);
+                if (rangeMatches) {
+                    rangeMatches.forEach(seg => {
+                        const startPart = seg.split('-')[0];
+                        const norm = normalizeHourSlot(startPart);
+                        if (/^\d{2}:\d{2}$/.test(norm)) {
+                            collected.add(norm);
+                        }
+                    });
+                }
+            }
+
+            return Array.from(collected).sort();
+        }
+
+        function inferCourtId(row) {
+            const direct = String(row.courtId || '').trim().toLowerCase();
+            if (direct === 'court-1' || direct === 'court 1' || direct === '1') return 'court-1';
+            if (direct === 'court-2' || direct === 'court 2' || direct === '2') return 'court-2';
+
+            const fac = String(row.facilityName || '').toLowerCase();
+            if (fac.includes('court 2') || fac.includes('court-2') || fac.includes('timur')) return 'court-2';
+            if (fac.includes('court 1') || fac.includes('court-1') || fac.includes('utama')) return 'court-1';
+            return direct;
+        }
+
+        // =========================================================================
+        // HELPER TARIF REGULER & PREMIUM
+        // =========================================================================
+        function loadPricingConfig() {
+            try {
+                const raw = localStorage.getItem(PRICING_CONFIG_KEY);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    PRICING_CONFIG = {
+                        tennis: { ...PRICING_CONFIG.tennis, ...(parsed.tennis || {}) },
+                        tennisPremium: { ...PRICING_CONFIG.tennisPremium, ...(parsed.tennisPremium || {}) },
+                        premiumHours: Array.isArray(parsed.premiumHours) ? parsed.premiumHours.map(normalizeHourSlot) : PRICING_CONFIG.premiumHours,
+                        pool: { ...PRICING_CONFIG.pool, ...(parsed.pool || {}) }
+                    };
+                }
+            } catch (e) {}
+        }
+
+        function savePricingConfigLocal(cfg) {
+            PRICING_CONFIG = {
+                tennis: {
+                    warga: Number(cfg.tennis?.warga ?? 35000),
+                    tamu: Number(cfg.tennis?.tamu ?? 60000)
+                },
+                tennisPremium: {
+                    warga: Number(cfg.tennisPremium?.warga ?? 50000),
+                    tamu: Number(cfg.tennisPremium?.tamu ?? 80000)
+                },
+                premiumHours: Array.isArray(cfg.premiumHours) ? cfg.premiumHours.map(normalizeHourSlot) : [],
+                pool: {
+                    warga: Number(cfg.pool?.warga ?? 15000),
+                    tamu: Number(cfg.pool?.tamu ?? 25000)
+                }
+            };
+            try {
+                localStorage.setItem(PRICING_CONFIG_KEY, JSON.stringify(PRICING_CONFIG));
+            } catch (e) {}
+        }
+
+        function isPremiumTennisHour(hour) {
+            return PRICING_CONFIG.premiumHours.includes(normalizeHourSlot(hour));
+        }
+
+        function getTennisHourRate(hour, status) {
+            return isPremiumTennisHour(hour)
+                ? Number(PRICING_CONFIG.tennisPremium[status] || 0)
+                : Number(PRICING_CONFIG.tennis[status] || 0);
+        }
+
+        function calculateTennisTotal(hoursList, status) {
+            return (hoursList || []).reduce((acc, h) => acc + getTennisHourRate(h, status), 0);
+        }
 
         // =========================================================================
         // HELPER KONEKSI GOOGLE SHEETS
@@ -1084,10 +1308,10 @@
 
             if (state === 'connected') {
                 dot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400';
-                label.textContent = 'Terhubung ke Google Sheets';
+                label.textContent = 'Terhubung ke Database';
                 banner.className = 'bg-emerald-50 border-b border-emerald-200 text-emerald-900 px-4 py-2 text-xs no-print transition-colors';
                 bannerIcon.className = 'w-4 h-4 text-emerald-600 shrink-0';
-                bannerText.innerHTML = '<strong>Terhubung ke Google Sheets (Real-Time):</strong> Jadwal Lapangan Tenis &amp; Kuota Kolam Renang tersinkronisasi langsung.';
+                bannerText.innerHTML = '<strong>Terhubung ke Database (Real-Time):</strong> Jadwal Lapangan Tenis &amp; Kuota Kolam Renang tersinkronisasi langsung.';
             } else if (state === 'error') {
                 dot.className = 'w-2.5 h-2.5 rounded-full bg-amber-400';
                 label.textContent = 'Mode Cadangan Lokal';
@@ -1099,7 +1323,7 @@
                 label.textContent = 'Menghubungkan...';
                 banner.className = 'bg-slate-100 border-b border-slate-200 text-slate-700 px-4 py-2 text-xs no-print transition-colors';
                 bannerIcon.className = 'w-4 h-4 text-teal-600 shrink-0';
-                bannerText.textContent = 'Menyinkronkan jadwal Lapangan Tenis & Kolam Renang dengan Google Sheets...';
+                bannerText.textContent = 'Menyinkronkan jadwal Lapangan Tenis & Kolam Renang dengan Database...';
             }
         }
 
@@ -1115,9 +1339,10 @@
         }
 
         function formatIndoDate(dateStr) {
-            if (!dateStr) return '-';
-            const parts = dateStr.split('-');
-            if (parts.length !== 3) return dateStr;
+            const normDate = normalizeDateValue(dateStr);
+            if (!normDate) return '-';
+            const parts = normDate.split('-');
+            if (parts.length !== 3) return normDate;
             const dateObj = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
             return dateObj.toLocaleDateString('id-ID', {
                 weekday: 'long',
@@ -1132,9 +1357,10 @@
         }
 
         function getNextHourLabel(startHour) {
-            const h = parseInt(startHour.split(':')[0], 10);
+            const norm = normalizeHourSlot(startHour);
+            const h = parseInt(norm.split(':')[0], 10);
             const next = String(h + 1).padStart(2, '0') + ':00';
-            return `${startHour} - ${next}`;
+            return `${norm} - ${next}`;
         }
 
         function getAllTickets() {
@@ -1178,7 +1404,7 @@
         function updateTicketBadge() {
             const all = getAllTickets();
             const myCodes = getMySavedCodes();
-            const activeMine = all.filter(t => myCodes.includes(t.code) && t.status !== 'Dibatalkan');
+            const activeMine = all.filter(t => myCodes.includes(t.code) && String(t.status || '').toLowerCase() !== 'dibatalkan');
             const badge = document.getElementById('active-ticket-badge');
             if (badge) {
                 badge.textContent = activeMine.length;
@@ -1206,7 +1432,7 @@
                 toast.style.opacity = '0';
                 toast.style.transform = 'translateY(8px)';
                 setTimeout(() => toast.remove(), 300);
-            }, 4000);
+            }, 4500);
         }
 
         // =========================================================================
@@ -1240,31 +1466,31 @@
                 const result = await response.json();
 
                 if (result && result.status === 'success' && Array.isArray(result.data)) {
-                    const remoteTickets = result.data.map(row => {
-                        let parsedHours = [];
-                        if (Array.isArray(row.hours)) {
-                            parsedHours = row.hours.map(h => String(h).trim()).filter(Boolean);
-                        } else if (typeof row.hours === 'string' && row.hours.trim() !== '') {
-                            parsedHours = row.hours.split(',').map(h => h.trim()).filter(Boolean);
-                        }
+                    if (result.pricing && typeof result.pricing === 'object') {
+                        savePricingConfigLocal(result.pricing);
+                        setVisitorStatus(visitorStatus);
+                    }
 
-                        // Normalisasi tanggal jika berbentuk ISO timestamp dari Sheets
-                        let cleanDate = String(row.date || '').trim().replace(/^'/, '');
-                        if (cleanDate.includes('T')) {
-                            cleanDate = cleanDate.split('T')[0];
-                        }
+                    const remoteTickets = result.data.map(row => {
+                        const parsedHours = extractHoursFromRow(row);
+                        const cleanDate = normalizeDateValue(row.date);
+                        const rawFacilityType = String(row.facilityType || '').trim().toLowerCase();
+                        const facNameLower = String(row.facilityName || '').toLowerCase();
+                        const resolvedType = (rawFacilityType === 'pool' || rawFacilityType === 'tennis')
+                            ? rawFacilityType
+                            : (facNameLower.includes('kolam') || facNameLower.includes('renang') || facNameLower.includes('pool') ? 'pool' : 'tennis');
 
                         return {
                             code: String(row.code || '').trim(),
-                            facilityType: String(row.facilityType || '').trim(),
+                            facilityType: resolvedType,
                             facilityName: String(row.facilityName || '').trim(),
-                            courtId: String(row.courtId || '').trim(),
+                            courtId: resolvedType === 'tennis' ? inferCourtId(row) : '',
                             sessionId: String(row.sessionId || '').trim(),
                             date: cleanDate,
                             hours: parsedHours,
                             scheduleSummary: String(row.scheduleSummary || '').trim(),
                             totalPeople: Number(row.totalPeople || 0),
-                            visitorStatus: String(row.visitorStatus || 'warga').trim(),
+                            visitorStatus: String(row.visitorStatus || 'warga').trim().toLowerCase(),
                             customerName: String(row.customerName || '').trim(),
                             whatsapp: String(row.whatsapp || '').trim().replace(/^'/, ''),
                             addressInfo: String(row.addressInfo || '').trim(),
@@ -1278,11 +1504,10 @@
 
                     saveAllTickets(remoteTickets);
 
-                    // Hapus slot tenis yang dipilih user jika ternyata baru saja terisi di Google Sheets
+                    // Hapus slot tenis yang dipilih user jika ternyata sudah terisi di Database
                     const occupiedNow = getOccupiedTennisHours(selectedCourt, sharedDate);
-                    selectedTennisHours = selectedTennisHours.filter(h => !occupiedNow.has(h));
+                    selectedTennisHours = selectedTennisHours.filter(h => !occupiedNow.has(normalizeHourSlot(h)));
 
-                    // Pastikan jumlah pengunjung kolam tidak melebihi sisa kuota terbaru
                     const remQuota = getRemainingPoolQuota(sharedDate, selectedPoolSession);
                     if (poolAdult + poolChild + poolToddler > remQuota) {
                         poolAdult = remQuota > 0 ? 1 : 0;
@@ -1290,7 +1515,6 @@
                         poolToddler = 0;
                     }
 
-                    // Render ulang seluruh komponen UI
                     renderTennisSlots();
                     renderPoolSessions();
                     syncPoolCountersUI();
@@ -1300,6 +1524,9 @@
                     if (!document.getElementById('my-tickets-modal').classList.contains('hidden')) {
                         renderMyTicketsList();
                     }
+                    if (!document.getElementById('admin-modal').classList.contains('hidden') && adminSession) {
+                        renderAdminBookingTable();
+                    }
 
                     const nowTime = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
                     const lastSyncEl = document.getElementById('last-sync-time');
@@ -1307,7 +1534,7 @@
 
                     updateConnectionStatusUI('connected');
                     if (showNotification) {
-                        showToast('Jadwal berhasil diperbarui dari Google Sheets!', 'success');
+                        showToast('Jadwal berhasil diperbarui dari Database!', 'success');
                     }
                 } else {
                     throw new Error((result && result.message) || 'Format data Google Sheets tidak sesuai');
@@ -1353,17 +1580,29 @@
         // KALKULASI SLOT TERISI & SISA KUOTA DARI DATABASE
         // =========================================================================
         function getOccupiedTennisHours(courtId, dateStr) {
-            const occupiedMap = new Map(); // hour -> booking object
+            const occupiedMap = new Map();
+            const targetCourt = inferCourtId({ courtId });
+            const targetDate = normalizeDateValue(dateStr);
             const all = getAllTickets();
+
             all.forEach(t => {
+                const isTennis = t.facilityType === 'tennis' || String(t.facilityName || '').toLowerCase().includes('tenis');
+                const rowCourt = inferCourtId(t);
+                const rowDate = normalizeDateValue(t.date);
+                const rowStatus = String(t.status || 'Aktif').trim().toLowerCase();
+
                 if (
-                    t.facilityType === 'tennis' &&
-                    t.courtId === courtId &&
-                    t.date === dateStr &&
-                    t.status !== 'Dibatalkan'
+                    isTennis &&
+                    rowCourt === targetCourt &&
+                    rowDate === targetDate &&
+                    rowStatus !== 'dibatalkan' &&
+                    rowStatus !== 'batal' &&
+                    rowStatus !== 'cancelled'
                 ) {
-                    (t.hours || []).forEach(h => {
-                        occupiedMap.set(h, t);
+                    const rowHours = extractHoursFromRow(t);
+                    rowHours.forEach(h => {
+                        const norm = normalizeHourSlot(h);
+                        if (norm) occupiedMap.set(norm, t);
                     });
                 }
             });
@@ -1371,14 +1610,21 @@
         }
 
         function getUsedPoolQuota(dateStr, sessionId) {
+            const targetDate = normalizeDateValue(dateStr);
             const all = getAllTickets();
             let used = 0;
             all.forEach(t => {
+                const isPool = t.facilityType === 'pool' || String(t.facilityName || '').toLowerCase().includes('kolam');
+                const rowDate = normalizeDateValue(t.date);
+                const rowStatus = String(t.status || 'Aktif').trim().toLowerCase();
+
                 if (
-                    t.facilityType === 'pool' &&
-                    t.date === dateStr &&
-                    t.sessionId === sessionId &&
-                    t.status !== 'Dibatalkan'
+                    isPool &&
+                    rowDate === targetDate &&
+                    String(t.sessionId || '').trim() === String(sessionId || '').trim() &&
+                    rowStatus !== 'dibatalkan' &&
+                    rowStatus !== 'batal' &&
+                    rowStatus !== 'cancelled'
                 ) {
                     used += Number(t.totalPeople || 0);
                 }
@@ -1413,14 +1659,27 @@
                 inputAddress.placeholder = 'Contoh: Kemang Pratama / Jl. Pekayon Raya No. 45';
             }
 
-            // Update badge tarif
-            document.getElementById('tennis-rate-badge').textContent = `${formatRupiah(RATES.tennis[visitorStatus])} / jam`;
-            const poolRateStr = formatRupiah(RATES.pool[visitorStatus]);
+            document.getElementById('card-rate-warga-desc').innerHTML =
+                `Tenis <strong>${formatRupiah(PRICING_CONFIG.tennis.warga)}</strong>/jam • Renang <strong>${formatRupiah(PRICING_CONFIG.pool.warga)}</strong>/org`;
+            document.getElementById('card-rate-tamu-desc').innerHTML =
+                `Tenis <strong>${formatRupiah(PRICING_CONFIG.tennis.tamu)}</strong>/jam • Renang <strong>${formatRupiah(PRICING_CONFIG.pool.tamu)}</strong>/org`;
+
+            document.getElementById('tennis-rate-badge').textContent = `Reguler: ${formatRupiah(PRICING_CONFIG.tennis[visitorStatus])} / jam`;
+            const premBadge = document.getElementById('tennis-premium-badge');
+            if (PRICING_CONFIG.premiumHours.length > 0) {
+                premBadge.classList.remove('hidden');
+                premBadge.textContent = `Premium: ${formatRupiah(PRICING_CONFIG.tennisPremium[visitorStatus])} / jam`;
+            } else {
+                premBadge.classList.add('hidden');
+            }
+
+            const poolRateStr = formatRupiah(PRICING_CONFIG.pool[visitorStatus]);
             document.getElementById('pool-rate-badge').textContent = `${poolRateStr} / orang`;
             document.querySelectorAll('.pool-unit-price').forEach(el => {
                 el.textContent = poolRateStr;
             });
 
+            renderTennisSlots();
             updateReservationSummary();
         }
 
@@ -1457,13 +1716,14 @@
         }
 
         function onSharedDateChange(newDate) {
-            if (!newDate) return;
-            sharedDate = newDate;
+            const normDate = normalizeDateValue(newDate);
+            if (!normDate) return;
+            sharedDate = normDate;
             selectedTennisHours = [];
 
             ['tennis-date-input', 'pool-date-input', 'board-date-input'].forEach(id => {
                 const el = document.getElementById(id);
-                if (el && el.value !== newDate) el.value = newDate;
+                if (el && el.value !== normDate) el.value = normDate;
             });
 
             renderTennisSlots();
@@ -1474,13 +1734,13 @@
         }
 
         function selectTennisCourt(courtId) {
-            selectedCourt = courtId;
+            selectedCourt = inferCourtId({ courtId }) || 'court-1';
             selectedTennisHours = [];
 
             const btn1 = document.getElementById('btn-court-1');
             const btn2 = document.getElementById('btn-court-2');
 
-            if (courtId === 'court-1') {
+            if (selectedCourt === 'court-1') {
                 btn1.className = 'py-2.5 px-3 rounded-xl border-2 border-teal-600 bg-teal-50 text-teal-900 text-xs font-extrabold transition-all flex flex-col items-center justify-center';
                 btn2.className = 'py-2.5 px-3 rounded-xl border-2 border-slate-200 bg-white text-slate-600 hover:border-slate-300 text-xs font-extrabold transition-all flex flex-col items-center justify-center';
             } else {
@@ -1500,18 +1760,24 @@
             const todayStr = getTodayDateStr();
             const currentHour = new Date().getHours();
 
-            grid.innerHTML = TENNIS_HOURS.map(hour => {
+            grid.innerHTML = TENNIS_HOURS.map(rawHour => {
+                const hour = normalizeHourSlot(rawHour);
                 const slotHourNum = parseInt(hour.split(':')[0], 10);
                 const isPastToday = (sharedDate === todayStr && slotHourNum <= currentHour);
                 const bookingInfo = occupiedMap.get(hour);
                 const isSelected = selectedTennisHours.includes(hour);
+                const isPrem = isPremiumTennisHour(hour);
+                const rateThisHour = getTennisHourRate(hour, visitorStatus);
 
+                // Sekali saja di-booking (aktif), slot langsung terkunci merah & tidak bisa di-book lagi
                 if (bookingInfo) {
                     return `
-                        <button type="button" disabled title="Terisi oleh ${bookingInfo.customerName}"
-                            class="py-2.5 px-2 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 cursor-not-allowed flex flex-col items-center justify-center gap-0.5">
-                            <span class="text-xs font-extrabold line-through">${hour}</span>
-                            <span class="text-[10px] font-bold flex items-center gap-1">
+                        <button type="button" disabled aria-disabled="true"
+                            onclick="event.preventDefault(); event.stopPropagation(); return false;"
+                            title="Terisi oleh ${bookingInfo.customerName} (${bookingInfo.code})"
+                            class="py-2.5 px-2 rounded-xl border-2 border-rose-400 bg-rose-100 text-rose-800 cursor-not-allowed pointer-events-none select-none flex flex-col items-center justify-center gap-0.5 shadow-inner">
+                            <span class="text-xs font-extrabold line-through opacity-85">${hour}</span>
+                            <span class="text-[10px] font-extrabold uppercase tracking-wide flex items-center gap-1 text-rose-700">
                                 <i data-lucide="lock" class="w-2.5 h-2.5"></i> Terisi
                             </span>
                         </button>
@@ -1520,8 +1786,10 @@
 
                 if (isPastToday) {
                     return `
-                        <button type="button" disabled title="Jam sudah terlewati"
-                            class="py-2.5 px-2 rounded-xl border border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed flex flex-col items-center justify-center gap-0.5">
+                        <button type="button" disabled aria-disabled="true"
+                            onclick="event.preventDefault(); event.stopPropagation(); return false;"
+                            title="Jam sudah terlewati"
+                            class="py-2.5 px-2 rounded-xl border border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed pointer-events-none select-none flex flex-col items-center justify-center gap-0.5">
                             <span class="text-xs font-bold">${hour}</span>
                             <span class="text-[10px]">Lewat</span>
                         </button>
@@ -1538,8 +1806,18 @@
                     `;
                 }
 
+                if (isPrem) {
+                    return `
+                        <button type="button" onclick="toggleTennisHour('${hour}')" title="Jam Premium: ${formatRupiah(rateThisHour)}/jam"
+                            class="py-2.5 px-2 rounded-xl border border-amber-300 bg-amber-50/70 hover:border-amber-500 hover:bg-amber-100/70 text-amber-950 flex flex-col items-center justify-center gap-0.5 transition-all active:scale-95">
+                            <span class="text-xs font-extrabold">${hour}</span>
+                            <span class="text-[10px] font-bold text-amber-700">★ Premium</span>
+                        </button>
+                    `;
+                }
+
                 return `
-                    <button type="button" onclick="toggleTennisHour('${hour}')"
+                    <button type="button" onclick="toggleTennisHour('${hour}')" title="Tarif Reguler: ${formatRupiah(rateThisHour)}/jam"
                         class="py-2.5 px-2 rounded-xl border border-slate-300 bg-white hover:border-teal-500 hover:bg-teal-50/50 text-slate-800 flex flex-col items-center justify-center gap-0.5 transition-all active:scale-95">
                         <span class="text-xs font-extrabold">${hour}</span>
                         <span class="text-[10px] text-slate-500">Tersedia</span>
@@ -1550,7 +1828,19 @@
             lucide.createIcons();
         }
 
-        function toggleTennisHour(hour) {
+        function toggleTennisHour(rawHour) {
+            const hour = normalizeHourSlot(rawHour);
+            const occupiedMap = getOccupiedTennisHours(selectedCourt, sharedDate);
+
+            // Guard ketat: jika jam sudah terisi, blokir pemilihan & bersihkan bila sempat masuk
+            if (occupiedMap.has(hour)) {
+                selectedTennisHours = selectedTennisHours.filter(h => h !== hour);
+                showToast(`Slot jam ${hour} sudah di-booking dan terkunci.`, 'error');
+                renderTennisSlots();
+                updateReservationSummary();
+                return;
+            }
+
             const idx = selectedTennisHours.indexOf(hour);
             if (idx >= 0) {
                 selectedTennisHours.splice(idx, 1);
@@ -1653,30 +1943,45 @@
             const summaryTotalPrice = document.getElementById('summary-total-price');
             const btnSubmit = document.getElementById('btn-confirm-booking');
 
+            // Pastikan jam yang sudah terisi tidak pernah tersisa di pilihan aktif
+            const occupiedNow = getOccupiedTennisHours(selectedCourt, sharedDate);
+            selectedTennisHours = selectedTennisHours.filter(h => !occupiedNow.has(normalizeHourSlot(h)));
+
             summaryDate.textContent = formatIndoDate(sharedDate);
             const statusLabel = visitorStatus === 'warga' ? 'Warga RW 025' : 'Tamu / Umum';
 
             if (activeTab === 'tennis') {
                 const courtObj = TENNIS_COURTS[selectedCourt];
-                const rate = RATES.tennis[visitorStatus];
+                const regRate = PRICING_CONFIG.tennis[visitorStatus];
+                const premRate = PRICING_CONFIG.tennisPremium[visitorStatus];
                 summaryFacility.textContent = courtObj.name;
-                summaryRateInfo.textContent = `${statusLabel} (${formatRupiah(rate)}/jam)`;
 
                 if (selectedTennisHours.length === 0) {
+                    summaryRateInfo.textContent = `${statusLabel} (Reg ${formatRupiah(regRate)} | Prem ${formatRupiah(premRate)})`;
                     summarySchedule.textContent = 'Belum ada slot jam dipilih';
                     summarySchedule.className = 'font-bold text-amber-300 text-right';
                     summaryTotalPrice.textContent = 'Rp 0';
                     btnSubmit.disabled = true;
                 } else {
-                    const labels = selectedTennisHours.map(h => getNextHourLabel(h));
+                    const labels = selectedTennisHours.map(h => {
+                        const tag = isPremiumTennisHour(h) ? ' ★' : '';
+                        return `${getNextHourLabel(h)}${tag}`;
+                    });
+                    const premCount = selectedTennisHours.filter(isPremiumTennisHour).length;
+                    const regCount = selectedTennisHours.length - premCount;
+                    const rateNotes = [];
+                    if (regCount > 0) rateNotes.push(`${regCount}x Reguler (${formatRupiah(regRate)})`);
+                    if (premCount > 0) rateNotes.push(`${premCount}x Premium (${formatRupiah(premRate)})`);
+
+                    summaryRateInfo.textContent = `${statusLabel} • ${rateNotes.join(', ')}`;
                     summarySchedule.textContent = `${labels.join(', ')} (${selectedTennisHours.length} Jam)`;
                     summarySchedule.className = 'font-bold text-emerald-300 text-right';
-                    summaryTotalPrice.textContent = formatRupiah(selectedTennisHours.length * rate);
+                    summaryTotalPrice.textContent = formatRupiah(calculateTennisTotal(selectedTennisHours, visitorStatus));
                     btnSubmit.disabled = false;
                 }
             } else {
                 const sessObj = POOL_SESSIONS.find(s => s.id === selectedPoolSession);
-                const rate = RATES.pool[visitorStatus];
+                const rate = PRICING_CONFIG.pool[visitorStatus];
                 const remaining = getRemainingPoolQuota(sharedDate, selectedPoolSession);
                 const totalVisitors = poolAdult + poolChild + poolToddler;
                 const paidVisitors = poolAdult + poolChild;
@@ -1706,7 +2011,6 @@
         // RENDER LIVE AVAILABILITY BOARD
         // =========================================================================
         function renderLiveAvailabilityBoard() {
-            // Court 1 & Court 2
             ['court-1', 'court-2'].forEach((cId, index) => {
                 const occupiedMap = getOccupiedTennisHours(cId, sharedDate);
                 const countEl = document.getElementById(index === 0 ? 'board-court1-count' : 'board-court2-count');
@@ -1734,7 +2038,6 @@
                 }
             });
 
-            // Kolam Renang
             const poolListEl = document.getElementById('board-pool-list');
             poolListEl.innerHTML = POOL_SESSIONS.map(sess => {
                 const used = getUsedPoolQuota(sharedDate, sess.id);
@@ -1775,11 +2078,10 @@
             const btnSubmit = document.getElementById('btn-confirm-booking');
             const originalHtml = btnSubmit.innerHTML;
             btnSubmit.disabled = true;
-            btnSubmit.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i><span>Menyimpan ke Google Sheets...</span>`;
+            btnSubmit.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i><span>Menyimpan ke Database...</span>`;
             lucide.createIcons();
 
             try {
-
                 const random4 = Math.floor(1000 + Math.random() * 9000);
                 const bookingCode = `#CKS-2026-${random4}`;
                 const paymentStatus = paymentMethod.includes('Loket')
@@ -1789,27 +2091,37 @@
                 let newTicket = null;
 
                 if (activeTab === 'tennis') {
-                    if (selectedTennisHours.length === 0) return;
+                    const normalizedSelected = selectedTennisHours.map(normalizeHourSlot).filter(Boolean);
+                    if (normalizedSelected.length === 0) {
+                        showToast('Pilih minimal 1 slot jam tenis yang masih tersedia.', 'error');
+                        return;
+                    }
 
                     const occupied = getOccupiedTennisHours(selectedCourt, sharedDate);
-                    const conflict = selectedTennisHours.find(h => occupied.has(h));
+                    const conflict = normalizedSelected.find(h => occupied.has(h));
                     if (conflict) {
-                        showToast(`Slot jam ${conflict} baru saja terisi oleh pemesan lain. Silakan pilih slot jam lain.`, 'error');
+                        showToast(`Slot jam ${conflict} sudah di-booking dan terkunci. Silakan pilih jam lain.`, 'error');
+                        selectedTennisHours = normalizedSelected.filter(h => !occupied.has(h));
                         renderTennisSlots();
                         updateReservationSummary();
                         return;
                     }
 
-                    const rate = RATES.tennis[visitorStatus];
+                    const totalAmount = calculateTennisTotal(normalizedSelected, visitorStatus);
+                    const scheduleLabels = normalizedSelected.map(h => {
+                        const premMark = isPremiumTennisHour(h) ? ' [Premium]' : '';
+                        return `${getNextHourLabel(h)}${premMark}`;
+                    });
+
                     newTicket = {
                         code: bookingCode,
                         facilityType: 'tennis',
                         facilityName: TENNIS_COURTS[selectedCourt].name,
                         courtId: selectedCourt,
                         sessionId: '',
-                        date: sharedDate,
-                        hours: [...selectedTennisHours],
-                        scheduleSummary: selectedTennisHours.map(h => getNextHourLabel(h)).join(', '),
+                        date: normalizeDateValue(sharedDate),
+                        hours: normalizedSelected,
+                        scheduleSummary: scheduleLabels.join(', '),
                         totalPeople: 0,
                         visitorStatus,
                         customerName: name,
@@ -1817,7 +2129,7 @@
                         addressInfo,
                         paymentMethod,
                         paymentStatus,
-                        totalAmount: selectedTennisHours.length * rate,
+                        totalAmount,
                         status: 'Aktif',
                         createdAt: new Date().toISOString()
                     };
@@ -1832,7 +2144,7 @@
                     }
 
                     const sessObj = POOL_SESSIONS.find(s => s.id === selectedPoolSession);
-                    const rate = RATES.pool[visitorStatus];
+                    const rate = PRICING_CONFIG.pool[visitorStatus];
                     const paidCount = poolAdult + poolChild;
 
                     const breakdown = [];
@@ -1846,7 +2158,7 @@
                         facilityName: 'Kolam Renang Taman Cikas (Dewasa & Anak)',
                         courtId: '',
                         sessionId: selectedPoolSession,
-                        date: sharedDate,
+                        date: normalizeDateValue(sharedDate),
                         hours: [],
                         scheduleSummary: `${sessObj.title} (${sessObj.time}) • ${breakdown.join(', ')}`,
                         totalPeople,
@@ -1862,7 +2174,6 @@
                     };
                 }
 
-                // Kirim ke Google Apps Script (action: "create")
                 const gasRes = await postToGoogleSheets({
                     action: 'create',
                     booking: newTicket
@@ -1875,16 +2186,15 @@
                 }
 
                 if (!gasRes || gasRes.status !== 'success') {
-                    throw new Error((gasRes && gasRes.message) || 'Gagal menyimpan reservasi ke Google Sheets');
+                    throw new Error((gasRes && gasRes.message) || 'Gagal menyimpan reservasi ke Database');
                 }
 
-                // Simpan kode tiket milik perangkat ini & update cache
+                // Simpan tiket ke cache & langsung kunci slot jam yang baru di-booking
                 addMySavedCode(bookingCode);
-                const all = getAllTickets();
+                const all = getAllTickets().filter(t => t.code !== bookingCode);
                 all.unshift(newTicket);
                 saveAllTickets(all);
 
-                // Reset pilihan slot/pengunjung
                 if (activeTab === 'tennis') {
                     selectedTennisHours = [];
                     renderTennisSlots();
@@ -1899,15 +2209,14 @@
                 renderLiveAvailabilityBoard();
                 updateReservationSummary();
 
-                showToast(`Reservasi berhasil tersimpan di Google Sheets! Kode E-Tiket: ${bookingCode}`, 'success');
+                showToast(`Reservasi berhasil tersimpan! Slot jam telah dikunci. Kode: ${bookingCode}`, 'success');
                 openPrintTicketModal(bookingCode);
 
-                // Sinkronisasi ulang latar belakang
                 syncFromGoogleSheets(false);
             } catch (err) {
                 console.error('Submit reservation error:', err);
                 const detail = err && err.message ? ` (${err.message})` : '';
-                showToast(`Gagal menyimpan booking ke Google Sheets${detail}.`, 'error');
+                showToast(`Gagal menyimpan booking${detail}.`, 'error');
             } finally {
                 btnSubmit.innerHTML = originalHtml;
                 lucide.createIcons();
@@ -1916,7 +2225,7 @@
         }
 
         // =========================================================================
-        // MANAJEMEN E-TIKET (LIHAT, CARI, CETAK PDF, BATALKAN)
+        // MANAJEMEN E-TIKET (LIHAT, CARI, CETAK PDF — PEMBATALAN KHUSUS ADMIN)
         // =========================================================================
         function openMyTicketsModal() {
             document.getElementById('my-tickets-modal').classList.remove('hidden');
@@ -1936,14 +2245,12 @@
 
             let filtered = [];
             if (query) {
-                // Jika user mengetik pencarian, cari di seluruh database Google Sheets (kode booking / nama / WA)
                 filtered = all.filter(t =>
                     t.code.toLowerCase().includes(query) ||
                     t.whatsapp.toLowerCase().includes(query) ||
                     t.customerName.toLowerCase().includes(query)
                 );
             } else {
-                // Default tampilkan tiket yang dibuat dari perangkat ini
                 filtered = all.filter(t => myCodes.includes(t.code));
             }
 
@@ -1964,7 +2271,7 @@
             }
 
             listEl.innerHTML = filtered.map(t => {
-                const isCancelled = t.status === 'Dibatalkan';
+                const isCancelled = String(t.status || '').toLowerCase() === 'dibatalkan';
                 return `
                     <div class="p-4 rounded-2xl border ${isCancelled ? 'border-slate-200 bg-slate-50 opacity-75' : 'border-slate-200 bg-white shadow-xs'} space-y-3">
                         <div class="flex flex-wrap items-center justify-between gap-2">
@@ -1988,19 +2295,13 @@
                             <p class="text-slate-500"><strong>Pemesan:</strong> ${t.customerName} (${t.addressInfo})</p>
                         </div>
 
-                        <div class="flex flex-wrap items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                        <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100">
+                            <span class="text-[11px] text-slate-400">Untuk pembatalan jadwal hubungi Admin RW 025</span>
                             <button type="button" onclick="openPrintTicketModal('${t.code}')"
                                 class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold flex items-center gap-1.5">
                                 <i data-lucide="printer" class="w-3.5 h-3.5"></i>
                                 <span>Detail &amp; Cetak PDF</span>
                             </button>
-                            ${!isCancelled ? `
-                                <button type="button" onclick="promptCancelTicket('${t.code}')"
-                                    class="px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold flex items-center gap-1.5">
-                                    <i data-lucide="x-circle" class="w-3.5 h-3.5"></i>
-                                    <span>Batalkan Jadwal</span>
-                                </button>
-                            ` : ''}
                         </div>
                     </div>
                 `;
@@ -2017,7 +2318,7 @@
             }
 
             document.getElementById('pt-code').textContent = ticket.code;
-            const isCancelled = ticket.status === 'Dibatalkan';
+            const isCancelled = String(ticket.status || '').toLowerCase() === 'dibatalkan';
 
             document.getElementById('print-ticket-body').innerHTML = `
                 <div class="flex items-center justify-between pb-3 border-b border-dashed border-slate-300">
@@ -2076,8 +2377,15 @@
             document.getElementById('print-ticket-modal').classList.add('hidden');
         }
 
-        // Pembatalan Jadwal -> POST action: "cancel" ke Google Sheets
+        // =========================================================================
+        // PEMBATALAN BOOKING (KHUSUS ADMIN)
+        // =========================================================================
         function promptCancelTicket(code) {
+            if (!adminSession || !adminSession.username) {
+                showToast('Pembatalan jadwal hanya dapat dilakukan oleh Admin.', 'error');
+                openAdminModal();
+                return;
+            }
             ticketToCancel = code;
             document.getElementById('cancel-ticket-code').textContent = code;
             document.getElementById('cancel-modal').classList.remove('hidden');
@@ -2090,21 +2398,22 @@
         }
 
         document.getElementById('confirm-cancel-action').addEventListener('click', async function () {
-            if (!ticketToCancel) return;
+            if (!ticketToCancel || !adminSession) return;
 
             const btn = this;
             const origText = btn.textContent;
             btn.disabled = true;
-            btn.textContent = 'Membatalkan di Google Sheets...';
+            btn.textContent = 'Membatalkan...';
 
             try {
                 const gasRes = await postToGoogleSheets({
                     action: 'cancel',
+                    username: adminSession.username,
                     code: ticketToCancel
                 });
 
                 if (!gasRes || gasRes.status !== 'success') {
-                    throw new Error((gasRes && gasRes.message) || 'Gagal membatalkan jadwal di Google Sheets');
+                    throw new Error((gasRes && gasRes.message) || 'Gagal membatalkan jadwal');
                 }
 
                 const all = getAllTickets();
@@ -2119,14 +2428,16 @@
                 syncPoolCountersUI();
                 renderLiveAvailabilityBoard();
                 renderMyTicketsList();
+                renderAdminBookingTable();
                 updateReservationSummary();
 
-                showToast(`Reservasi ${ticketToCancel} telah dibatalkan di Google Sheets. Slot/kuota dikembalikan.`, 'success');
+                showToast(`Reservasi ${ticketToCancel} telah dibatalkan oleh Admin. Slot/kuota dikembalikan.`, 'success');
                 closeCancelModal();
                 syncFromGoogleSheets(false);
             } catch (err) {
                 console.error('Cancel error:', err);
-                showToast('Gagal membatalkan jadwal di Google Sheets. Periksa koneksi internet Anda.', 'error');
+                const detail = err && err.message ? ` (${err.message})` : '';
+                showToast(`Gagal membatalkan jadwal${detail}.`, 'error');
             } finally {
                 btn.disabled = false;
                 btn.textContent = origText;
@@ -2134,9 +2445,14 @@
         });
 
         // =========================================================================
-        // PENGATURAN URL GOOGLE APPS SCRIPT
+        // PENGATURAN API GOOGLE APPS SCRIPT (KHUSUS ADMIN)
         // =========================================================================
         function openSheetSettingsModal() {
+            if (!adminSession || !adminSession.username) {
+                showToast('Pengaturan API hanya dapat diakses oleh Admin.', 'error');
+                openAdminModal();
+                return;
+            }
             document.getElementById('input-gas-url').value = getActiveGasUrl();
             document.getElementById('sheet-settings-modal').classList.remove('hidden');
             lucide.createIcons();
@@ -2147,6 +2463,7 @@
         }
 
         async function saveAndTestGoogleSheetUrl() {
+            if (!adminSession) return;
             const val = document.getElementById('input-gas-url').value.trim();
             if (!val || !val.startsWith('https://script.google.com/')) {
                 showToast('URL Web App harus diawali dengan https://script.google.com/...', 'error');
@@ -2160,6 +2477,7 @@
         }
 
         async function resetGoogleSheetUrl() {
+            if (!adminSession) return;
             try {
                 localStorage.removeItem(GAS_URL_OVERRIDE_KEY);
             } catch (e) {}
@@ -2168,13 +2486,9 @@
             await syncFromGoogleSheets(true);
         }
 
-
         // =========================================================================
-        // FITUR ADMIN: LOGIN VIA GOOGLE SHEET (Admin_Cikas), EDIT, HAPUS & EXPORT
+        // FITUR ADMIN: LOGIN VIA GOOGLE SHEET, PENGATURAN HARGA, BATAL, EDIT & HAPUS
         // =========================================================================
-        const ADMIN_SESSION_KEY = 'cikas_sport_center_admin_session_v1';
-        let adminSession = null;
-
         function loadAdminSession() {
             try {
                 const raw = sessionStorage.getItem(ADMIN_SESSION_KEY);
@@ -2228,12 +2542,70 @@
                 dashView.classList.remove('hidden');
                 logoutBtn.classList.remove('hidden');
                 badge.textContent = `Admin: ${adminSession.username}`;
+                renderAdminPricingForm();
                 renderAdminBookingTable();
             } else {
                 loginForm.classList.remove('hidden');
                 dashView.classList.add('hidden');
                 logoutBtn.classList.add('hidden');
             }
+        }
+
+        function renderAdminPricingForm() {
+            document.getElementById('cfg-tennis-warga').value = PRICING_CONFIG.tennis.warga;
+            document.getElementById('cfg-tennis-tamu').value = PRICING_CONFIG.tennis.tamu;
+            document.getElementById('cfg-tennis-premium-warga').value = PRICING_CONFIG.tennisPremium.warga;
+            document.getElementById('cfg-tennis-premium-tamu').value = PRICING_CONFIG.tennisPremium.tamu;
+            document.getElementById('cfg-pool-warga').value = PRICING_CONFIG.pool.warga;
+            document.getElementById('cfg-pool-tamu').value = PRICING_CONFIG.pool.tamu;
+
+            const grid = document.getElementById('cfg-premium-hours-grid');
+            if (!grid) return;
+            grid.innerHTML = TENNIS_HOURS.map(h => {
+                const checked = PRICING_CONFIG.premiumHours.includes(h) ? 'checked' : '';
+                return `
+                    <label class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 cursor-pointer hover:bg-amber-50 select-none">
+                        <input type="checkbox" value="${h}" class="cfg-prem-hour-cb accent-amber-600" ${checked}>
+                        <span class="font-mono font-bold text-slate-800">${h}</span>
+                    </label>
+                `;
+            }).join('');
+        }
+
+        async function saveAdminPricingSettings() {
+            if (!adminSession) return;
+            const selectedPremHours = Array.from(document.querySelectorAll('.cfg-prem-hour-cb:checked')).map(cb => normalizeHourSlot(cb.value));
+
+            const updatedConfig = {
+                tennis: {
+                    warga: Number(document.getElementById('cfg-tennis-warga').value || 0),
+                    tamu: Number(document.getElementById('cfg-tennis-tamu').value || 0)
+                },
+                tennisPremium: {
+                    warga: Number(document.getElementById('cfg-tennis-premium-warga').value || 0),
+                    tamu: Number(document.getElementById('cfg-tennis-premium-tamu').value || 0)
+                },
+                premiumHours: selectedPremHours,
+                pool: {
+                    warga: Number(document.getElementById('cfg-pool-warga').value || 0),
+                    tamu: Number(document.getElementById('cfg-pool-tamu').value || 0)
+                }
+            };
+
+            savePricingConfigLocal(updatedConfig);
+            setVisitorStatus(visitorStatus);
+            renderTennisSlots();
+            updateReservationSummary();
+
+            try {
+                await postToGoogleSheets({
+                    action: 'savePricingConfig',
+                    username: adminSession.username,
+                    pricing: updatedConfig
+                });
+            } catch (e) {}
+
+            showToast('Pengaturan tarif reguler & jam premium berhasil disimpan!', 'success');
         }
 
         async function handleAdminLogin(e) {
@@ -2249,7 +2621,7 @@
             const btn = document.getElementById('btn-admin-login-submit');
             const origHtml = btn.innerHTML;
             btn.disabled = true;
-            btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i><span>Memverifikasi ke Google Sheet...</span>`;
+            btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i><span>Memverifikasi ke Database...</span>`;
             lucide.createIcons();
 
             try {
@@ -2312,7 +2684,7 @@
 
             const rows = getFilteredAdminBookings();
             const activeRevenue = rows
-                .filter(r => r.status !== 'Dibatalkan')
+                .filter(r => String(r.status || '').toLowerCase() !== 'dibatalkan')
                 .reduce((acc, r) => acc + (Number(r.totalAmount) || 0), 0);
 
             statTotal.textContent = `Total Data: ${rows.length}`;
@@ -2330,7 +2702,7 @@
             }
 
             tbody.innerHTML = rows.map(t => {
-                const isCancelled = t.status === 'Dibatalkan';
+                const isCancelled = String(t.status || '').toLowerCase() === 'dibatalkan';
                 const encodedCode = encodeURIComponent(t.code);
                 return `
                     <tr class="${isCancelled ? 'bg-slate-50/80 text-slate-400' : 'hover:bg-slate-50/70 text-slate-800'}">
@@ -2361,7 +2733,13 @@
                                     class="p-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200">
                                     <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
                                 </button>
-                                <button type="button" onclick="deleteAdminBooking(decodeURIComponent('${encodedCode}'))" title="Hapus Permanen dari Google Sheet"
+                                ${!isCancelled ? `
+                                    <button type="button" onclick="promptCancelTicket(decodeURIComponent('${encodedCode}'))" title="Batalkan Booking"
+                                        class="p-1.5 rounded-lg bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200">
+                                        <i data-lucide="ban" class="w-3.5 h-3.5"></i>
+                                    </button>
+                                ` : ''}
+                                <button type="button" onclick="deleteAdminBooking(decodeURIComponent('${encodedCode}'))" title="Hapus Permanen dari Database"
                                     class="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200">
                                     <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                                 </button>
@@ -2375,6 +2753,7 @@
         }
 
         function openAdminEditModal(code) {
+            if (!adminSession) return;
             const target = getAllTickets().find(t => t.code === code);
             if (!target) {
                 showToast('Data booking tidak ditemukan.', 'error');
@@ -2383,7 +2762,7 @@
 
             document.getElementById('edit-original-code').value = target.code;
             document.getElementById('edit-code-display').textContent = target.code;
-            document.getElementById('edit-date').value = target.date || '';
+            document.getElementById('edit-date').value = normalizeDateValue(target.date) || '';
             document.getElementById('edit-status').value = target.status || 'Aktif';
             document.getElementById('edit-schedule-summary').value = target.scheduleSummary || '';
             document.getElementById('edit-hours').value = Array.isArray(target.hours) ? target.hours.join(', ') : (target.hours || '');
@@ -2414,12 +2793,12 @@
 
             const rawHours = document.getElementById('edit-hours').value
                 .split(',')
-                .map(h => h.trim())
+                .map(normalizeHourSlot)
                 .filter(Boolean);
 
             const updatedBooking = {
                 ...existing,
-                date: document.getElementById('edit-date').value.trim(),
+                date: normalizeDateValue(document.getElementById('edit-date').value.trim()),
                 status: document.getElementById('edit-status').value,
                 scheduleSummary: document.getElementById('edit-schedule-summary').value.trim(),
                 hours: rawHours,
@@ -2451,7 +2830,7 @@
                 }
 
                 closeAdminEditModal();
-                showToast(`Reservasi ${code} berhasil diperbarui di Google Sheets!`, 'success');
+                showToast(`Reservasi ${code} berhasil diperbarui!`, 'success');
                 await syncFromGoogleSheets(false);
             } catch (err) {
                 console.error('Update booking error:', err);
@@ -2465,7 +2844,7 @@
 
         async function deleteAdminBooking(code) {
             if (!adminSession) return;
-            const ok = window.confirm(`Hapus permanen booking ${code} dari Google Sheets? Tindakan ini tidak dapat dibatalkan.`);
+            const ok = window.confirm(`Hapus permanen booking ${code} dari Database? Tindakan ini tidak dapat dibatalkan.`);
             if (!ok) return;
 
             try {
@@ -2479,7 +2858,7 @@
                     throw new Error((res && res.message) || 'Gagal menghapus data booking');
                 }
 
-                showToast(`Booking ${code} berhasil dihapus dari Google Sheets.`, 'success');
+                showToast(`Booking ${code} berhasil dihapus.`, 'success');
                 await syncFromGoogleSheets(false);
             } catch (err) {
                 console.error('Delete booking error:', err);
@@ -2573,6 +2952,7 @@
                 }
             });
 
+            loadPricingConfig();
             loadAdminSession();
             updateTicketBadge();
             setVisitorStatus('warga');
@@ -2580,7 +2960,6 @@
             renderLiveAvailabilityBoard();
             lucide.createIcons();
 
-            // Langsung sinkronisasi dengan Google Sheets saat halaman dibuka
             await syncFromGoogleSheets(false);
         });
     </script>
